@@ -1,0 +1,24 @@
+.broadcast-container {
+	display: flex;
+	flex-direction: row;
+	column-gap: 20px;
+}
+
+.tools-container {
+	min-width: 120px;
+	background-color: #ddd;
+}
+
+.whiteboard-container {
+	width: 100%;
+	position: relative;
+}
+
+#red5pro-publisher,
+#whiteboard {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}

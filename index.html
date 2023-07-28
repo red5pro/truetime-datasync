@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="/style/main.css" />
+		<link rel="stylesheet" href="/style/publisher.css" />
+		<title>Red5 TrueTime DataSync</title>
+	</head>
+	<body>
+		<div id="app">
+			<div class="container broadcast-container">
+				<div class="tools-container">
+					<h1>Draw.</h1>
+					<label for="stroke-color-input">Stroke</label>
+					<input
+						id="stroke-color-input"
+						name="stroke-color-input"
+						type="color"
+					/>
+					<label for="line-width-input">Line Width</label>
+					<input
+						id="line-width-input"
+						name="line-width-input"
+						type="number"
+						value="5"
+					/>
+					<button id="clear-button">Clear</button>
+				</div>
+				<div class="whiteboard-container">
+					<video id="red5pro-publisher" muted autoplay playsinline></video>
+					<canvas id="whiteboard"></canvas>
+				</div>
+			</div>
+			<div class="container subscribe-container">
+				<video id="red5pro-subscriber" controls autoplay playsinline></video>
+			</div>
+		</div>
+		<script src="https://unpkg.com/red5pro-webrtc-sdk@latest/red5pro-sdk.min.js"></script>
+		<script type="module" src="/script/main.js"></script>
+	</body>
+</html>
