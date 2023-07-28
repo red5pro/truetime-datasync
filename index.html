@@ -11,20 +11,25 @@
 		<div id="app">
 			<div class="container broadcast-container">
 				<div class="tools-container">
-					<h1>Draw.</h1>
-					<label for="stroke-color-input">Stroke</label>
-					<input
-						id="stroke-color-input"
-						name="stroke-color-input"
-						type="color"
-					/>
-					<label for="line-width-input">Line Width</label>
-					<input
-						id="line-width-input"
-						name="line-width-input"
-						type="number"
-						value="5"
-					/>
+					<h1 class="tools-header">Tools</h1>
+					<p class="tool-input">
+						<label for="stroke-color-input">Stroke</label>
+						<input
+							id="stroke-color-input"
+							name="stroke-color-input"
+							type="color"
+							value="#FFFFFF"
+						/>
+					</p>
+					<p class="tool-input">
+						<label for="line-width-input">Line Width</label>
+						<input
+							id="line-width-input"
+							name="line-width-input"
+							type="number"
+							value="2"
+						/>
+					</p>
 					<button id="clear-button">Clear</button>
 				</div>
 				<div class="whiteboard-container">
@@ -37,6 +42,7 @@
 			</div>
 		</div>
 		<script src="https://unpkg.com/red5pro-webrtc-sdk@latest/red5pro-sdk.min.js"></script>
+		<script src="/script/whiteboard.js"></script>
 		<script type="module" src="/script/main.js"></script>
 	</body>
 </html>
