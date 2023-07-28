@@ -10,7 +10,7 @@ let isDrawing = false;
 let startX = 0;
 let startY = 0;
 let lineWidth = 2;
-let strokeColor = "#FFFFFF";
+let strokeColor = "#11FF00";
 let canvasOffsetX = canvas.getBoundingClientRect().left;
 let canvasOffsetY = canvas.getBoundingClientRect().top;
 strokeColorInput.value = strokeColor;
@@ -37,9 +37,16 @@ const draw = (e) => {
 	startY = y;
 };
 
+const handleWindowResize = () => {
+	context.clearRect(0, 0, canvas.width, canvas.height);
+	canvasOffsetX = canvas.getBoundingClientRect().left;
+	canvasOffsetY = canvas.getBoundingClientRect().top;
+	canvas.width = canvasParent.clientWidth;
+	canvas.height = canvasParent.clientHeight;
+};
+
 strokeColorInput.addEventListener("change", (e) => {
 	strokeColor = e.target.value;
-	// context.strokeStyle = strokeColor;
 });
 
 lineWidthInput.addEventListener("change", (e) => {
@@ -61,13 +68,10 @@ canvas.addEventListener("mouseout", (e) => {
 
 canvas.addEventListener("mousemove", draw);
 
-const handleWindowResize = () => {
+clearButton.addEventListener("click", () => {
 	context.clearRect(0, 0, canvas.width, canvas.height);
-	canvasOffsetX = canvas.getBoundingClientRect().left;
-	canvasOffsetY = canvas.getBoundingClientRect().top;
-	canvas.width = canvasParent.clientWidth;
-	canvas.height = canvasParent.clientHeight;
-};
+});
+
 window.addEventListener("resize", handleWindowResize);
 document.addEventListener("DOMContentLoaded", handleWindowResize);
 handleWindowResize();
