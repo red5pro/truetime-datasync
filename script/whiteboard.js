@@ -1,77 +1,114 @@
-const strokeColorInput = document.querySelector("#stroke-color-input");
-const lineWidthInput = document.querySelector("#line-width-input");
-const clearButton = document.querySelector("#clear-button");
+class Whiteboard {
+	constructor(canvas, transport) {
+		this.canvas = canvas;
+		this.context = canvas.getContext("2d");
+		this.transport = transport;
 
-const canvas = document.querySelector("#whiteboard");
-const canvasParent = canvas.parentElement;
-const context = canvas.getContext("2d");
+		this.isDrawing = false;
+		this.startX = 0;
+		this.startY = 0;
+		this.canvasOffsetX = this.canvas.getBoundingClientRect().left;
+		this.canvasOffsetY = this.canvas.getBoundingClientRect().top;
+		this.lineWidth = 2;
+		this.strokeColor = "#11FF00";
+		this.context.strokeStyle = this.strokeColor;
 
-let isDrawing = false;
-let startX = 0;
-let startY = 0;
-let lineWidth = 2;
-let strokeColor = "#11FF00";
-let canvasOffsetX = canvas.getBoundingClientRect().left;
-let canvasOffsetY = canvas.getBoundingClientRect().top;
-strokeColorInput.value = strokeColor;
-lineWidthInput.value = lineWidth;
-context.strokeStyle = strokeColor;
-
-const draw = (e) => {
-	if (!isDrawing) {
-		return;
+		this.canvas.addEventListener("mousemove", this.draw.bind(this));
+		this.canvas.addEventListener("mousedown", this.onDown.bind(this));
+		this.canvas.addEventListener("mouseup", this.onUpOrOut.bind(this));
+		this.canvas.addEventListener("mouseout", this.onUpOrOut.bind(this));
+		this.onResize();
 	}
 
-	const x = e.clientX - canvasOffsetX;
-	const y = e.clientY - canvasOffsetY;
+	draw(e) {
+		if (!this.isDrawing) {
+			return;
+		}
 
-	context.beginPath();
-	context.moveTo(startX, startY);
-	context.lineTo(x, y);
-	context.strokeStyle = strokeColor;
-	context.lineWidth = lineWidth;
-	context.lineCap = "round";
-	context.stroke();
-	context.closePath();
-	startX = x;
-	startY = y;
-};
+		const x = e.clientX - this.canvasOffsetX;
+		const y = e.clientY - this.canvasOffsetY;
 
-const handleWindowResize = () => {
-	context.clearRect(0, 0, canvas.width, canvas.height);
-	canvasOffsetX = canvas.getBoundingClientRect().left;
-	canvasOffsetY = canvas.getBoundingClientRect().top;
-	canvas.width = canvasParent.clientWidth;
-	canvas.height = canvasParent.clientHeight;
-};
+		this.context.beginPath();
+		this.context.moveTo(this.startX, this.startY);
+		this.context.lineTo(x, y);
+		this.context.strokeStyle = this.strokeColor;
+		this.context.lineWidth = this.lineWidth;
+		this.context.lineCap = "round";
+		this.context.stroke();
+		this.context.closePath();
+		this.startX = x;
+		this.startY = y;
 
-strokeColorInput.addEventListener("change", (e) => {
-	strokeColor = e.target.value;
-});
+		this.transport.send("whiteboardDraw", {
+			x: x,
+			y: y,
+			color: this.strokeColor,
+			lineWidth: this.lineWidth,
+		});
+		// console.log(
+		// 	"MOVE x,y:color,linewidth",
+		// 	x,
+		// 	y,
+		// 	this.strokeColor,
+		// 	this.lineWidth
+		// );
+	}
 
-lineWidthInput.addEventListener("change", (e) => {
-	lineWidth = parseInt(e.target.value, 10);
-});
+	clear() {
+		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.transport.send("whiteboardClear", {
+			width: this.canvas.width,
+			height: this.canvas.height,
+		});
+		// console.log("CLEARED CANVAS");
+	}
 
-canvas.addEventListener("mousedown", (e) => {
-	isDrawing = true;
-	startX = e.clientX - canvasOffsetX;
-	startY = e.clientY - canvasOffsetY;
-});
+	onDown(e) {
+		this.isDrawing = true;
+		this.startX = e.clientX - this.canvasOffsetX;
+		this.startY = e.clientY - this.canvasOffsetY;
+		this.transport.send("whiteboardStart", {
+			x: this.startX,
+			y: this.startY,
+			color: this.strokeColor,
+			lineWidth: this.lineWidth,
+		});
+		// console.log("startX, startY", this.startX, this.startY);
+	}
 
-canvas.addEventListener("mouseup", (e) => {
-	isDrawing = false;
-});
-canvas.addEventListener("mouseout", (e) => {
-	isDrawing = false;
-});
+	onUpOrOut(e) {
+		this.isDrawing = false;
+		this.transport.send("whiteboardStop", {
+			width: this.canvas.width,
+			height: this.canvas.height,
+		});
+		// console.log("STOPPED DRAWING");
+	}
 
-canvas.addEventListener("mousemove", draw);
+	onLineWidthChange(lineWidth) {
+		this.lineWidth = lineWidth;
+	}
 
-clearButton.addEventListener("click", () => {
-	context.clearRect(0, 0, canvas.width, canvas.height);
-});
+	onStrokeColorChange(strokeColor) {
+		this.strokeColor = strokeColor;
+	}
 
-window.addEventListener("resize", handleWindowResize);
-document.addEventListener("DOMContentLoaded", handleWindowResize);
-handleWindowResize();
+	onResize() {
+		const canvasParent = this.canvas.parentElement;
+		if (!canvasParent) {
+			return;
+		}
+		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.canvasOffsetX = this.canvas.getBoundingClientRect().left;
+		this.canvasOffsetY = this.canvas.getBoundingClientRect().top;
+		this.canvas.width = canvasParent.clientWidth;
+		this.canvas.height = canvasParent.clientHeight;
+		this.transport.send("whiteboardClear", {
+			width: this.canvas.width,
+			height: this.canvas.height,
+		});
+		// console.log("CLEARED CANVAS");
+	}
+}
+
+export default Whiteboard;
