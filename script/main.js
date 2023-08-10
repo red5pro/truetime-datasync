@@ -10,6 +10,7 @@ const strokeColorInput = document.querySelector("#stroke-color-input");
 const lineWidthInput = document.querySelector("#line-width-input");
 const clearButton = document.querySelector("#clear-button");
 const canvas = document.querySelector("#whiteboard");
+const subscriberCanvas = document.querySelector("#whiteboard-subscriber");
 
 const NAME = "[TrueTime DataSync]";
 
@@ -25,7 +26,7 @@ const baseConfig = {
 console.log(NAME, "baseConfig", baseConfig);
 
 let publisher, whiteboard;
-let subscriber;
+let subscriber, whiteboardSubscriber;
 
 const startPublish = async () => {
 	// Create a new Publisher instance.
@@ -41,7 +42,7 @@ const startPublish = async () => {
 
 const startWhiteboard = (publisher) => {
 	// Create a new Whiteboard instance.
-	whiteboard = new Whiteboard(canvas, publisher);
+	whiteboard = new Whiteboard("[Publisher:Whiteboard]", canvas, publisher);
 	strokeColorInput.addEventListener("change", (e) => {
 		whiteboard.onStrokeColorChange(e.target.value);
 	});
@@ -60,7 +61,22 @@ const startSubscribe = async () => {
 	subscriber.on("*", (event) => {
 		const { type } = event;
 		if (type !== "Subscribe.Time.Update") {
-			console.log("[Subscriber]", event.type);
+			console.log("[Subscriber]", type);
+			if (type === "Subscribe.Send.Invoke") {
+				const { methodName, data } = event.data;
+				if (whiteboardSubscriber) {
+					if (methodName === "whiteboardDraw") {
+						const { x, y } = data;
+						whiteboardSubscriber.update(x, y);
+					} else if (methodName === "whiteboardClear") {
+						whiteboardSubscriber.clear();
+					} else if (methodName === "whiteboardStart") {
+						whiteboardSubscriber.start(data);
+					} else if (methodName === "whiteboardStop") {
+						whiteboardSubscriber.stop();
+					}
+				}
+			}
 		}
 	});
 	await subscriber.init({
@@ -68,6 +84,11 @@ const startSubscribe = async () => {
 		mediaElementId: "red5pro-subscriber",
 	});
 	await subscriber.subscribe();
+	// Create a new Whiteboard instance to draw updates on.
+	whiteboardSubscriber = new Whiteboard(
+		"[Subscriber:Whiteboard]",
+		subscriberCanvas
+	);
 };
 
 const handleWindowResize = () => {

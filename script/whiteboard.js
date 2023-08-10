@@ -1,5 +1,6 @@
 class Whiteboard {
-	constructor(canvas, transport) {
+	constructor(name, canvas, transport) {
+		this.name = name || "Whiteboard";
 		this.canvas = canvas;
 		this.context = canvas.getContext("2d");
 		this.transport = transport;
@@ -18,6 +19,44 @@ class Whiteboard {
 		this.canvas.addEventListener("mouseup", this.onUpOrOut.bind(this));
 		this.canvas.addEventListener("mouseout", this.onUpOrOut.bind(this));
 		this.onResize();
+
+		const canvasParent = this.canvas.parentElement;
+		var ro = new ResizeObserver(this.onResize.bind(this));
+		canvasParent && ro.observe(canvasParent);
+	}
+
+	notify(type, data) {
+		if (this.transport) {
+			this.transport.send(type, data);
+		}
+	}
+
+	start(data) {
+		const { x, y, color, lineWidth } = data;
+		this.startX = x;
+		this.startY = y;
+		this.strokeColor = color;
+		this.lineWidth = lineWidth;
+		this.isDrawing = true;
+		console.log(this.name, "START x,y:color,linewidth", x, y, color, lineWidth);
+
+		this.context.beginPath();
+		this.context.moveTo(this.startX, this.startY);
+		console.log(this.name, "START x,y:color,linewidth", x, y, color, lineWidth);
+	}
+
+	update(x, y) {
+		this.context.lineTo(x, y);
+		this.context.strokeStyle = this.strokeColor;
+		this.context.lineWidth = this.lineWidth;
+		this.context.lineCap = "round";
+		this.context.stroke();
+	}
+
+	stop() {
+		this.isDrawing = false;
+		this.context.closePath();
+		console.log(this.name, "STOPPED DRAWING");
 	}
 
 	draw(e) {
@@ -25,8 +64,8 @@ class Whiteboard {
 			return;
 		}
 
-		const x = e.clientX - this.canvasOffsetX;
-		const y = e.clientY - this.canvasOffsetY;
+		const x = e.clientX - this.canvasOffsetX + window.scrollX;
+		const y = e.clientY - this.canvasOffsetY + window.scrollY;
 
 		this.context.beginPath();
 		this.context.moveTo(this.startX, this.startY);
@@ -39,50 +78,51 @@ class Whiteboard {
 		this.startX = x;
 		this.startY = y;
 
-		this.transport.send("whiteboardDraw", {
+		this.notify("whiteboardDraw", {
 			x: x,
 			y: y,
 			color: this.strokeColor,
 			lineWidth: this.lineWidth,
 		});
-		// console.log(
-		// 	"MOVE x,y:color,linewidth",
-		// 	x,
-		// 	y,
-		// 	this.strokeColor,
-		// 	this.lineWidth
-		// );
+		console.log(
+			this.name,
+			"MOVE x,y:color,linewidth",
+			x,
+			y,
+			this.strokeColor,
+			this.lineWidth
+		);
 	}
 
 	clear() {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		this.transport.send("whiteboardClear", {
+		this.notify("whiteboardClear", {
 			width: this.canvas.width,
 			height: this.canvas.height,
 		});
-		// console.log("CLEARED CANVAS");
+		// console.log(this.name, "CLEARED CANVAS");
 	}
 
 	onDown(e) {
 		this.isDrawing = true;
 		this.startX = e.clientX - this.canvasOffsetX;
 		this.startY = e.clientY - this.canvasOffsetY;
-		this.transport.send("whiteboardStart", {
+		this.notify("whiteboardStart", {
 			x: this.startX,
 			y: this.startY,
 			color: this.strokeColor,
 			lineWidth: this.lineWidth,
 		});
-		// console.log("startX, startY", this.startX, this.startY);
+		// console.log(this.name, "startX, startY", this.startX, this.startY);
 	}
 
 	onUpOrOut(e) {
 		this.isDrawing = false;
-		this.transport.send("whiteboardStop", {
+		this.notify("whiteboardStop", {
 			width: this.canvas.width,
 			height: this.canvas.height,
 		});
-		// console.log("STOPPED DRAWING");
+		// console.log(this.name, "STOPPED DRAWING");
 	}
 
 	onLineWidthChange(lineWidth) {
@@ -103,11 +143,11 @@ class Whiteboard {
 		this.canvasOffsetY = this.canvas.getBoundingClientRect().top;
 		this.canvas.width = canvasParent.clientWidth;
 		this.canvas.height = canvasParent.clientHeight;
-		this.transport.send("whiteboardClear", {
+		this.notify("whiteboardClear", {
 			width: this.canvas.width,
 			height: this.canvas.height,
 		});
-		// console.log("CLEARED CANVAS");
+		// console.log(this.name, "CLEARED CANVAS");
 	}
 }
 
