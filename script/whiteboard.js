@@ -64,8 +64,8 @@ class Whiteboard {
 			return;
 		}
 
-		const x = e.clientX - this.canvasOffsetX + window.scrollX;
-		const y = e.clientY - this.canvasOffsetY + window.scrollY;
+		const x = e.clientX - this.canvasOffsetX; // + window.scrollX;
+		const y = e.clientY - this.canvasOffsetY; // + window.scrollY;
 
 		this.context.beginPath();
 		this.context.moveTo(this.startX, this.startY);
