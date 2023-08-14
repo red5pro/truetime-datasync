@@ -37,7 +37,6 @@ class Whiteboard {
 	start(data) {
 		const { width, height } = this.canvas;
 		const { x, y, xRatio, yRatio, color, lineWidth } = data;
-		const { x: xCoord, y: yCoord } = this.coordinates;
 		this.startX = xRatio * width; // - (xCoord ? xCoord : 0);
 		this.startY = yRatio * height; // - (yCoord ? yCoord : 0);
 		this.strokeColor = color;
@@ -92,11 +91,11 @@ class Whiteboard {
 		this.startY = y;
 
 		this.notify("whiteboardDraw", {
-			x: x,
-			y: y,
-			xRatio: x / width, // - (xCoord ? xCoord : 0),
-			yRatio: y / height, // - (yCoord ? yCoord : 0),
-			factor: this.factor,
+			x: x - xCoord,
+			y: y - yCoord,
+			xRatio: (x - xCoord) / width, // - (xCoord ? xCoord : 0),
+			yRatio: (y - yCoord) / height, // - (yCoord ? yCoord : 0),
+			coordinates: this.coordinates,
 			color: this.strokeColor,
 			lineWidth: this.lineWidth,
 		});
@@ -124,12 +123,18 @@ class Whiteboard {
 		this.isDrawing = true;
 		this.startX = e.clientX - this.canvasOffsetX;
 		this.startY = e.clientY - this.canvasOffsetY;
+		const {
+			x: xCoord,
+			y: yCoord,
+			width: widthCoord,
+			height: heightCoord,
+		} = this.coordinates;
 		this.notify("whiteboardStart", {
-			x: this.startX,
-			y: this.startY,
-			xRatio: this.startX / width,
-			yRatio: this.startY / height,
-			factor: this.factor,
+			x: this.startX - xCoord,
+			y: this.startY - yCoord,
+			xRatio: (this.startX - xCoord) / width,
+			yRatio: (this.startY - yCoord) / height,
+			coordinates: this.coordinates,
 			color: this.strokeColor,
 			lineWidth: this.lineWidth,
 		});
