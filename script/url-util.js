@@ -68,5 +68,8 @@ export const query = () => {
 		host,
 		app,
 		streamName,
+		get: (key) => {
+			return searchParams.get(key);
+		},
 	};
 };

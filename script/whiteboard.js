@@ -1,10 +1,16 @@
 class Whiteboard {
-	constructor(name, canvas, transport) {
+	constructor(name, canvas, transport, drawable = true) {
 		this.name = name || "Whiteboard";
 		this.canvas = canvas;
 		this.context = canvas.getContext("2d");
 		this.transport = transport;
 
+		this.coordinates = {
+			x: 0,
+			y: 0,
+			width: canvas.width,
+			height: canvas.height,
+		};
 		this.isDrawing = false;
 		this.startX = 0;
 		this.startY = 0;
@@ -14,15 +20,12 @@ class Whiteboard {
 		this.strokeColor = "#11FF00";
 		this.context.strokeStyle = this.strokeColor;
 
-		this.canvas.addEventListener("mousemove", this.draw.bind(this));
-		this.canvas.addEventListener("mousedown", this.onDown.bind(this));
-		this.canvas.addEventListener("mouseup", this.onUpOrOut.bind(this));
-		this.canvas.addEventListener("mouseout", this.onUpOrOut.bind(this));
-		this.onResize();
-
-		const canvasParent = this.canvas.parentElement;
-		var ro = new ResizeObserver(this.onResize.bind(this));
-		canvasParent && ro.observe(canvasParent);
+		if (drawable) {
+			this.canvas.addEventListener("mousemove", this.draw.bind(this));
+			this.canvas.addEventListener("mousedown", this.onDown.bind(this));
+			this.canvas.addEventListener("mouseup", this.onUpOrOut.bind(this));
+			this.canvas.addEventListener("mouseout", this.onUpOrOut.bind(this));
+		}
 	}
 
 	notify(type, data) {
@@ -32,9 +35,11 @@ class Whiteboard {
 	}
 
 	start(data) {
-		const { x, y, color, lineWidth } = data;
-		this.startX = x;
-		this.startY = y;
+		const { width, height } = this.canvas;
+		const { x, y, xRatio, yRatio, color, lineWidth } = data;
+		const { x: xCoord, y: yCoord } = this.coordinates;
+		this.startX = xRatio * width - (xCoord ? xCoord : 0);
+		this.startY = yRatio * height - (yCoord ? yCoord : 0);
 		this.strokeColor = color;
 		this.lineWidth = lineWidth;
 		this.isDrawing = true;
@@ -45,8 +50,9 @@ class Whiteboard {
 		console.log(this.name, "START x,y:color,linewidth", x, y, color, lineWidth);
 	}
 
-	update(x, y) {
-		this.context.lineTo(x, y);
+	update(x, y, xRatio, yRatio) {
+		const { width, height } = this.canvas;
+		this.context.lineTo(xRatio * width, yRatio * height);
 		this.context.strokeStyle = this.strokeColor;
 		this.context.lineWidth = this.lineWidth;
 		this.context.lineCap = "round";
@@ -64,6 +70,8 @@ class Whiteboard {
 			return;
 		}
 
+		const { width, height } = this.canvas;
+		const { x: xCoord, y: yCoord } = this.coordinates;
 		const x = e.clientX - this.canvasOffsetX; // + window.scrollX;
 		const y = e.clientY - this.canvasOffsetY; // + window.scrollY;
 
@@ -81,17 +89,20 @@ class Whiteboard {
 		this.notify("whiteboardDraw", {
 			x: x,
 			y: y,
+			xRatio: x / width - (xCoord ? xCoord : 0),
+			yRatio: y / height - (yCoord ? yCoord : 0),
+			factor: this.factor,
 			color: this.strokeColor,
 			lineWidth: this.lineWidth,
 		});
-		console.log(
-			this.name,
-			"MOVE x,y:color,linewidth",
-			x,
-			y,
-			this.strokeColor,
-			this.lineWidth
-		);
+		// console.log(
+		// 	this.name,
+		// 	"MOVE x,y:color,linewidth",
+		// 	x,
+		// 	y,
+		// 	this.strokeColor,
+		// 	this.lineWidth
+		// );
 	}
 
 	clear() {
@@ -104,12 +115,16 @@ class Whiteboard {
 	}
 
 	onDown(e) {
+		const { width, height } = this.canvas;
 		this.isDrawing = true;
 		this.startX = e.clientX - this.canvasOffsetX;
 		this.startY = e.clientY - this.canvasOffsetY;
 		this.notify("whiteboardStart", {
 			x: this.startX,
 			y: this.startY,
+			xRatio: this.startX / width,
+			yRatio: this.startY / height,
+			factor: this.factor,
 			color: this.strokeColor,
 			lineWidth: this.lineWidth,
 		});
@@ -133,7 +148,7 @@ class Whiteboard {
 		this.strokeColor = strokeColor;
 	}
 
-	onResize() {
+	onResize(coordinates) {
 		const canvasParent = this.canvas.parentElement;
 		if (!canvasParent) {
 			return;
@@ -148,6 +163,21 @@ class Whiteboard {
 			height: this.canvas.height,
 		});
 		// console.log(this.name, "CLEARED CANVAS");
+
+		if (!coordinates) return;
+		this.coordinates = coordinates;
+		const { x, y, width, height } = this.coordinates;
+		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.context.strokeStyle = "#ff0000";
+		this.context.lineWidth = this.lineWidth;
+		this.context.lineCap = "round";
+		this.context.beginPath();
+		this.context.strokeRect(
+			x + this.lineWidth,
+			y + this.lineWidth,
+			width - this.lineWidth * 2,
+			height - this.lineWidth * 2
+		);
 	}
 }
 
