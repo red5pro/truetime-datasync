@@ -38,8 +38,8 @@ class Whiteboard {
 		const { width, height } = this.canvas;
 		const { x, y, xRatio, yRatio, color, lineWidth } = data;
 		const { x: xCoord, y: yCoord } = this.coordinates;
-		this.startX = xRatio * width - (xCoord ? xCoord : 0);
-		this.startY = yRatio * height - (yCoord ? yCoord : 0);
+		this.startX = xRatio * width; // - (xCoord ? xCoord : 0);
+		this.startY = yRatio * height; // - (yCoord ? yCoord : 0);
 		this.strokeColor = color;
 		this.lineWidth = lineWidth;
 		this.isDrawing = true;
@@ -71,7 +71,12 @@ class Whiteboard {
 		}
 
 		const { width, height } = this.canvas;
-		const { x: xCoord, y: yCoord } = this.coordinates;
+		const {
+			x: xCoord,
+			y: yCoord,
+			width: widthCoord,
+			height: heightCoord,
+		} = this.coordinates;
 		const x = e.clientX - this.canvasOffsetX; // + window.scrollX;
 		const y = e.clientY - this.canvasOffsetY; // + window.scrollY;
 
@@ -89,8 +94,8 @@ class Whiteboard {
 		this.notify("whiteboardDraw", {
 			x: x,
 			y: y,
-			xRatio: x / width - (xCoord ? xCoord : 0),
-			yRatio: y / height - (yCoord ? yCoord : 0),
+			xRatio: x / width, // - (xCoord ? xCoord : 0),
+			yRatio: y / height, // - (yCoord ? yCoord : 0),
 			factor: this.factor,
 			color: this.strokeColor,
 			lineWidth: this.lineWidth,
