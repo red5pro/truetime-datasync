@@ -127,6 +127,7 @@ const startSubsciberWhiteboard = (subscriber) => {
 	whiteboardSubscriber = new Whiteboard(
 		"[Subscriber:Whiteboard]",
 		subscriberCanvas,
+		undefined,
 		false
 	);
 };

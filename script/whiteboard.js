@@ -43,7 +43,7 @@ class Whiteboard {
 		} = this.coordinates;
 		const { x, y, xRatio, yRatio, color, lineWidth } = data;
 		this.startX = xCoord + xRatio * widthCoord;
-		this.startY = yCoord + yRatio * heightCooed;
+		this.startY = yCoord + yRatio * heightCoord;
 
 		this.strokeColor = color;
 		this.lineWidth = lineWidth;
@@ -52,6 +52,8 @@ class Whiteboard {
 
 		this.context.beginPath();
 		this.context.moveTo(this.startX, this.startY);
+		this.context.strokeStyle = this.strokeColor;
+		this.context.lineWidth = this.lineWidth;
 		this.isDrawing = true;
 	}
 
@@ -190,6 +192,9 @@ class Whiteboard {
 
 		if (!coordinates) return;
 		this.coordinates = coordinates;
+
+		// Draw border box of visible video area.
+		/*
 		const { x, y, width, height } = this.coordinates;
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.context.strokeStyle = "#ff0000";
@@ -202,6 +207,7 @@ class Whiteboard {
 			width - this.lineWidth * 2,
 			height - this.lineWidth * 2
 		);
+    */
 	}
 }
 
