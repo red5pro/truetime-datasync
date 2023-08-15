@@ -29,9 +29,6 @@ const NAME = "[TrueTime DataSync]";
 
 setLogLevel("debug");
 
-console.log(NAME, "pub", pubFit, pubPosition);
-console.log(NAME, "sub", subFit, subPosition);
-
 const baseConfig = {
 	host: host || window.location.hostname,
 	app: app || "live",

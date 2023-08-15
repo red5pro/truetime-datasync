@@ -35,23 +35,37 @@ class Whiteboard {
 	}
 
 	start(data) {
-		const { width, height } = this.canvas;
+		const {
+			x: xCoord,
+			y: yCoord,
+			width: widthCoord,
+			height: heightCoord,
+		} = this.coordinates;
 		const { x, y, xRatio, yRatio, color, lineWidth } = data;
-		this.startX = xRatio * width; // - (xCoord ? xCoord : 0);
-		this.startY = yRatio * height; // - (yCoord ? yCoord : 0);
+		this.startX = xCoord + xRatio * widthCoord;
+		this.startY = yCoord + yRatio * heightCooed;
+
 		this.strokeColor = color;
 		this.lineWidth = lineWidth;
-		this.isDrawing = true;
-		console.log(this.name, "START x,y:color,linewidth", x, y, color, lineWidth);
+		this.context.strokeStyle = this.strokeColor;
+		this.context.lineWidth = this.lineWidth;
 
 		this.context.beginPath();
 		this.context.moveTo(this.startX, this.startY);
-		console.log(this.name, "START x,y:color,linewidth", x, y, color, lineWidth);
+		this.isDrawing = true;
 	}
 
 	update(x, y, xRatio, yRatio) {
-		const { width, height } = this.canvas;
-		this.context.lineTo(xRatio * width, yRatio * height);
+		const {
+			x: xCoord,
+			y: yCoord,
+			width: widthCoord,
+			height: heightCoord,
+		} = this.coordinates;
+		this.context.lineTo(
+			xCoord + xRatio * widthCoord,
+			yCoord + yRatio * heightCoord
+		);
 		this.context.strokeStyle = this.strokeColor;
 		this.context.lineWidth = this.lineWidth;
 		this.context.lineCap = "round";
@@ -76,8 +90,8 @@ class Whiteboard {
 			width: widthCoord,
 			height: heightCoord,
 		} = this.coordinates;
-		const x = e.clientX - this.canvasOffsetX; // + window.scrollX;
-		const y = e.clientY - this.canvasOffsetY; // + window.scrollY;
+		const x = e.clientX - this.canvasOffsetX + window.scrollX;
+		const y = e.clientY - this.canvasOffsetY + window.scrollY;
 
 		this.context.beginPath();
 		this.context.moveTo(this.startX, this.startY);
@@ -93,8 +107,8 @@ class Whiteboard {
 		this.notify("whiteboardDraw", {
 			x: x - xCoord,
 			y: y - yCoord,
-			xRatio: (x - xCoord) / width, // - (xCoord ? xCoord : 0),
-			yRatio: (y - yCoord) / height, // - (yCoord ? yCoord : 0),
+			xRatio: (x - xCoord) / widthCoord, // - (xCoord ? xCoord : 0),
+			yRatio: (y - yCoord) / heightCoord, // - (yCoord ? yCoord : 0),
 			coordinates: this.coordinates,
 			color: this.strokeColor,
 			lineWidth: this.lineWidth,
@@ -121,8 +135,8 @@ class Whiteboard {
 	onDown(e) {
 		const { width, height } = this.canvas;
 		this.isDrawing = true;
-		this.startX = e.clientX - this.canvasOffsetX;
-		this.startY = e.clientY - this.canvasOffsetY;
+		this.startX = e.clientX - this.canvasOffsetX + window.scrollX;
+		this.startY = e.clientY - this.canvasOffsetY + window.scrollY;
 		const {
 			x: xCoord,
 			y: yCoord,
@@ -132,8 +146,8 @@ class Whiteboard {
 		this.notify("whiteboardStart", {
 			x: this.startX - xCoord,
 			y: this.startY - yCoord,
-			xRatio: (this.startX - xCoord) / width,
-			yRatio: (this.startY - yCoord) / height,
+			xRatio: (this.startX - xCoord) / widthCoord,
+			yRatio: (this.startY - yCoord) / heightCoord,
 			coordinates: this.coordinates,
 			color: this.strokeColor,
 			lineWidth: this.lineWidth,
