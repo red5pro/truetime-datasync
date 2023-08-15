@@ -104,7 +104,10 @@ const startSubscribe = async () => {
 						whiteboardSubscriber.stop();
 					}
 				}
-			} else if (type === "Subscribe.Start") {
+			} else if (
+				type === "Subscribe.Start" ||
+				type === "Subscribe.VideoDimensions.Change"
+			) {
 				handleSubscriberResize();
 			}
 		}

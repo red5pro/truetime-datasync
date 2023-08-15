@@ -52,8 +52,6 @@ class Whiteboard {
 
 		this.context.beginPath();
 		this.context.moveTo(this.startX, this.startY);
-		this.context.strokeStyle = this.strokeColor;
-		this.context.lineWidth = this.lineWidth;
 		this.isDrawing = true;
 	}
 
@@ -68,9 +66,6 @@ class Whiteboard {
 			xCoord + xRatio * widthCoord,
 			yCoord + yRatio * heightCoord
 		);
-		this.context.strokeStyle = this.strokeColor;
-		this.context.lineWidth = this.lineWidth;
-		this.context.lineCap = "round";
 		this.context.stroke();
 	}
 
@@ -95,12 +90,12 @@ class Whiteboard {
 		const x = e.clientX - this.canvasOffsetX + window.scrollX;
 		const y = e.clientY - this.canvasOffsetY + window.scrollY;
 
-		this.context.beginPath();
-		this.context.moveTo(this.startX, this.startY);
-		this.context.lineTo(x, y);
 		this.context.strokeStyle = this.strokeColor;
 		this.context.lineWidth = this.lineWidth;
 		this.context.lineCap = "round";
+		this.context.beginPath();
+		this.context.moveTo(this.startX, this.startY);
+		this.context.lineTo(x, y);
 		this.context.stroke();
 		this.context.closePath();
 		this.startX = x;
