@@ -153,12 +153,14 @@ class Whiteboard {
 	}
 
 	onUpOrOut(e) {
-		this.isDrawing = false;
-		this.notify("whiteboardStop", {
-			width: this.canvas.width,
-			height: this.canvas.height,
-		});
-		// console.log(this.name, "STOPPED DRAWING");
+		if (this.isDrawing) {
+			this.isDrawing = false;
+			this.notify("whiteboardStop", {
+				width: this.canvas.width,
+				height: this.canvas.height,
+			});
+			// console.log(this.name, "STOPPED DRAWING");
+		}
 	}
 
 	onLineWidthChange(lineWidth) {

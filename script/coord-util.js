@@ -3,75 +3,47 @@ const getCoordinates = (
   viewHeight,
   clientWidth,
   clientHeight,
-  objectFit,
-  objectPosition // TODO: remove
+  objectFit
 ) => {
-  let coordinates = {}
-  const horizontalPercentage = parseInt(objectPosition[0]) / 100
-  const verticalPercentage = parseInt(objectPosition[1]) / 100
   const viewRatio = viewWidth / viewHeight
   const clientRatio = clientWidth / clientHeight
-
+  let dw,
+    dh = 1
+  let x,
+    y,
+    width,
+    height = 0
   if (objectFit === 'contain') {
     if (viewRatio > clientRatio) {
-      coordinates.destinationWidthPercentage = 1
-      coordinates.destinationHeightPercentage =
-        viewHeight / clientHeight / (viewWidth / clientWidth)
-      coordinates.destinationXPercentage = 0
-      coordinates.destinationYPercentage =
-        (1 - coordinates.destinationHeightPercentage) * verticalPercentage
+      dw = 1
+      dh = viewHeight / clientHeight / (viewWidth / clientWidth)
     } else {
-      coordinates.destinationWidthPercentage =
-        viewWidth / clientWidth / (viewHeight / clientHeight)
-      coordinates.destinationHeightPercentage = 1
-      coordinates.destinationXPercentage =
-        (1 - coordinates.destinationWidthPercentage) * horizontalPercentage
-      coordinates.destinationYPercentage = 0
+      dw = viewWidth / clientWidth / (viewHeight / clientHeight)
+      dh = 1
     }
-    coordinates.x =
-      clientWidth * (1 - coordinates.destinationWidthPercentage) * 0.5
-    coordinates.y =
-      clientHeight * (1 - coordinates.destinationHeightPercentage) * 0.5
+    x = clientWidth * (1 - dw) * 0.5
+    y = clientHeight * (1 - dh) * 0.5
   } else if (objectFit === 'cover') {
     if (viewRatio > clientRatio) {
-      coordinates.sourceWidth = viewHeight * viewRatio
-      coordinates.sourceHeight = viewHeight
-      coordinates.sourceX = (clientWidth - coordinates.sourceWidth) * 0.5
-      coordinates.sourceY = 0
-      coordinates.destinationWidthPercentage =
-        viewWidth / clientWidth / (viewHeight / clientHeight)
-      coordinates.destinationHeightPercentage = 1
+      dw = viewWidth / clientWidth / (viewHeight / clientHeight)
+      dh = 1
     } else {
-      coordinates.sourceWidth = viewWidth
-      coordinates.sourceHeight = viewWidth / viewRatio
-      coordinates.sourceX = 0
-      coordinates.sourceY = (clientHeight - coordinates.sourceHeight) * 0.5
-      coordinates.destinationWidthPercentage = 1
-      coordinates.destinationHeightPercentage =
-        viewHeight / clientHeight / (viewWidth / clientWidth)
+      dw = 1
+      dh = viewHeight / clientHeight / (viewWidth / clientWidth)
     }
 
-    coordinates.x =
-      (clientWidth - clientWidth * coordinates.destinationWidthPercentage) * 0.5
-    coordinates.y =
-      (clientHeight - clientHeight * coordinates.destinationHeightPercentage) *
-      0.5
+    x = (clientWidth - clientWidth * dw) * 0.5
+    y = (clientHeight - clientHeight * dh) * 0.5
   } else {
-    coordinates.destinationWidthPercentage = viewWidth / clientWidth
-    coordinates.destinationHeightPercentage = viewHeight / clientHeight
-    coordinates.x =
-      (clientWidth - clientWidth * coordinates.destinationWidthPercentage) * 0.5
-    coordinates.y =
-      (clientHeight - clientHeight * coordinates.destinationHeightPercentage) *
-      0.5
+    dw = viewWidth / clientWidth
+    dh = viewHeight / clientHeight
+    x = (clientWidth - clientWidth * dw) * 0.5
+    y = (clientHeight - clientHeight * dh) * 0.5
   }
+  width = clientWidth * dw
+  height = clientHeight * dh
 
-  coordinates.width = clientWidth * coordinates.destinationWidthPercentage
-  coordinates.height = clientHeight * coordinates.destinationHeightPercentage
-  console.log(
-    `COORDS: ${clientWidth},${viewWidth} :: ${coordinates.width},${coordinates.height}`
-  )
-  return coordinates
+  return { x, y, width, height }
 }
 
 export { getCoordinates }

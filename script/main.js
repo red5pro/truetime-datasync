@@ -3,8 +3,10 @@ import { query } from "./url-util.js";
 import { getCoordinates } from "./coord-util.js";
 import Whiteboard from "./whiteboard.js";
 
-const { host, app, streamName } = query();
+const { host, app, streamName, get } = query();
 const { setLogLevel, WHIPClient, WHEPClient } = red5prosdk;
+
+const fit = get("fit") || "contain";
 
 const strokeColorInput = document.querySelector("#stroke-color-input");
 const lineWidthInput = document.querySelector("#line-width-input");
@@ -13,17 +15,11 @@ const canvas = document.querySelector("#whiteboard");
 const subscriberCanvas = document.querySelector("#whiteboard-subscriber");
 
 const pubVideo = document.querySelector("#red5pro-publisher");
+pubVideo.style.objectFit = fit;
 const pubFit = window.getComputedStyle(pubVideo).getPropertyValue("object-fit");
-const pubPosition = window
-	.getComputedStyle(pubVideo)
-	.getPropertyValue("object-position")
-	.split(" ");
 const subVideo = document.querySelector("#red5pro-subscriber");
+subVideo.style.objectFit = fit;
 const subFit = window.getComputedStyle(subVideo).getPropertyValue("object-fit");
-const subPosition = window
-	.getComputedStyle(subVideo)
-	.getPropertyValue("object-position")
-	.split(" ");
 
 const NAME = "[TrueTime DataSync]";
 
@@ -139,16 +135,14 @@ const handlePublisherResize = () => {
 	if (whiteboard) {
 		const { clientWidth, clientHeight } = pubVideo;
 		const { videoWidth, videoHeight } = pubVideo;
-		const factor = getCoordinates(
+		const coordinates = getCoordinates(
 			videoWidth,
 			videoHeight,
 			clientWidth,
 			clientHeight,
-			pubFit,
-			pubPosition
+			pubFit
 		);
-		console.log(`${NAME} - Publisher`, "factor", factor);
-		whiteboard.onResize(factor);
+		whiteboard.onResize(coordinates);
 	}
 };
 
@@ -156,15 +150,14 @@ const handleSubscriberResize = () => {
 	if (whiteboardSubscriber) {
 		const { clientWidth, clientHeight } = subVideo;
 		const { videoWidth, videoHeight } = subVideo;
-		const factor = getCoordinates(
+		const coordinates = getCoordinates(
 			videoWidth,
 			videoHeight,
 			clientWidth,
 			clientHeight,
-			subFit,
-			subPosition
+			subFit
 		);
-		whiteboardSubscriber.onResize(factor);
+		whiteboardSubscriber.onResize(coordinates);
 	}
 };
 
