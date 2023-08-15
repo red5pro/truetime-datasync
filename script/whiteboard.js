@@ -1,3 +1,13 @@
+const debounce = (func, delay) => {
+	let timeoutId;
+	return function (...args) {
+		clearTimeout(timeoutId);
+		timeoutId = setTimeout(() => {
+			func.apply(this, args);
+		}, delay);
+	};
+};
+
 class Whiteboard {
 	constructor(name, canvas, transport, drawable = true) {
 		this.name = name || "Whiteboard";
@@ -26,6 +36,9 @@ class Whiteboard {
 			this.canvas.addEventListener("mouseup", this.onUpOrOut.bind(this));
 			this.canvas.addEventListener("mouseout", this.onUpOrOut.bind(this));
 		}
+
+		this.history = [];
+		this.redoHistoryDebounced = debounce(this.redoHistory.bind(this), 1000);
 	}
 
 	notify(type, data) {
@@ -53,6 +66,7 @@ class Whiteboard {
 		this.context.beginPath();
 		this.context.moveTo(this.startX, this.startY);
 		this.isDrawing = true;
+		this.history.push({ ...data, methodName: "start" });
 	}
 
 	update(x, y, xRatio, yRatio) {
@@ -67,12 +81,14 @@ class Whiteboard {
 			yCoord + yRatio * heightCoord
 		);
 		this.context.stroke();
+		this.history.push({ x, y, xRatio, yRatio, methodName: "update" });
 	}
 
 	stop() {
 		this.isDrawing = false;
 		this.context.closePath();
-		console.log(this.name, "STOPPED DRAWING");
+		// console.log(this.name, "STOPPED DRAWING");
+		this.history.push({ methodName: "stop" });
 	}
 
 	draw(e) {
@@ -101,7 +117,7 @@ class Whiteboard {
 		this.startX = x;
 		this.startY = y;
 
-		this.notify("whiteboardDraw", {
+		const data = {
 			x: x - xCoord,
 			y: y - yCoord,
 			xRatio: (x - xCoord) / widthCoord, // - (xCoord ? xCoord : 0),
@@ -109,7 +125,9 @@ class Whiteboard {
 			coordinates: this.coordinates,
 			color: this.strokeColor,
 			lineWidth: this.lineWidth,
-		});
+		};
+		this.notify("whiteboardDraw", data);
+		this.history.push({ ...data, methodName: "update" });
 		// console.log(
 		// 	this.name,
 		// 	"MOVE x,y:color,linewidth",
@@ -126,7 +144,21 @@ class Whiteboard {
 			width: this.canvas.width,
 			height: this.canvas.height,
 		});
+		this.history = [];
 		// console.log(this.name, "CLEARED CANVAS");
+	}
+
+	redoHistory() {
+		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.history.forEach((item) => {
+			if (item.methodName === "start") {
+				this.start(item);
+			} else if (item.methodName === "update") {
+				this.update(item.x, item.y, item.xRatio, item.yRatio);
+			} else if (item.methodName === "stop") {
+				this.stop();
+			}
+		});
 	}
 
 	onDown(e) {
@@ -140,7 +172,7 @@ class Whiteboard {
 			width: widthCoord,
 			height: heightCoord,
 		} = this.coordinates;
-		this.notify("whiteboardStart", {
+		const data = {
 			x: this.startX - xCoord,
 			y: this.startY - yCoord,
 			xRatio: (this.startX - xCoord) / widthCoord,
@@ -148,7 +180,9 @@ class Whiteboard {
 			coordinates: this.coordinates,
 			color: this.strokeColor,
 			lineWidth: this.lineWidth,
-		});
+		};
+		this.notify("whiteboardStart", data);
+		this.history.push({ ...data, methodName: "start" });
 		// console.log(this.name, "startX, startY", this.startX, this.startY);
 	}
 
@@ -161,6 +195,7 @@ class Whiteboard {
 			});
 			// console.log(this.name, "STOPPED DRAWING");
 		}
+		this.history.push({ methodName: "stop" });
 	}
 
 	onLineWidthChange(lineWidth) {
@@ -181,12 +216,8 @@ class Whiteboard {
 		this.canvasOffsetY = this.canvas.getBoundingClientRect().top;
 		this.canvas.width = canvasParent.clientWidth;
 		this.canvas.height = canvasParent.clientHeight;
-		this.notify("whiteboardClear", {
-			width: this.canvas.width,
-			height: this.canvas.height,
-		});
-		// console.log(this.name, "CLEARED CANVAS");
 
+		this.redoHistoryDebounced();
 		if (!coordinates) return;
 		this.coordinates = coordinates;
 
