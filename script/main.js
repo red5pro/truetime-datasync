@@ -7,6 +7,7 @@ const { host, app, streamName, get } = query();
 const { setLogLevel, WHIPClient, WHEPClient } = red5prosdk;
 
 const fit = get("fit") || "contain";
+const mode = get("mode") || "pubsub";
 
 const strokeColorInput = document.querySelector("#stroke-color-input");
 const lineWidthInput = document.querySelector("#line-width-input");
@@ -14,9 +15,12 @@ const clearButton = document.querySelector("#clear-button");
 const canvas = document.querySelector("#whiteboard");
 const subscriberCanvas = document.querySelector("#whiteboard-subscriber");
 
+const pubContainer = document.querySelector(".broadcast-container");
 const pubVideo = document.querySelector("#red5pro-publisher");
 pubVideo.style.objectFit = fit;
 const pubFit = window.getComputedStyle(pubVideo).getPropertyValue("object-fit");
+
+const subContainer = document.querySelector(".subscribe-container");
 const subVideo = document.querySelector("#red5pro-subscriber");
 subVideo.style.objectFit = fit;
 const subFit = window.getComputedStyle(subVideo).getPropertyValue("object-fit");
@@ -56,7 +60,6 @@ const startPublish = async () => {
 	await publisher.init(baseConfig);
 	await publisher.publish();
 	startWhiteboard(publisher);
-	await startSubscribe();
 };
 
 const startWhiteboard = (publisher) => {
@@ -88,6 +91,10 @@ const startSubscribe = async () => {
 			console.log("[Subscriber]", type);
 			if (type === "Subscribe.Send.Invoke") {
 				const { methodName, data } = event.data;
+				const { senderName } = data;
+				if (senderName !== baseConfig.streamName) {
+					return;
+				}
 				if (whiteboardSubscriber) {
 					if (methodName === "whiteboardDraw") {
 						const { x, y, xRatio, yRatio } = data;
@@ -179,4 +186,17 @@ window.addEventListener("pagehide", shutdown);
 window.addEventListener("beforeunload", shutdown);
 window.addEventListener("resize", handleWindowResize);
 document.addEventListener("DOMContentLoaded", handleWindowResize);
-startPublish();
+
+const start = async () => {
+	if (mode === "pub") {
+		subContainer.style.display = "none";
+		await startPublish();
+	} else if (mode === "sub") {
+		pubContainer.style.display = "none";
+		await startSubscribe();
+	} else {
+		await startPublish();
+		await startSubscribe();
+	}
+};
+start();
