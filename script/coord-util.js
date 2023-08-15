@@ -6,11 +6,11 @@ const getCoordinates = (
   objectFit,
   objectPosition // TODO: remove
 ) => {
-  var coordinates = {}
-  var horizontalPercentage = parseInt(objectPosition[0]) / 100
-  var verticalPercentage = parseInt(objectPosition[1]) / 100
-  var viewRatio = viewWidth / viewHeight
-  var clientRatio = clientWidth / clientHeight
+  let coordinates = {}
+  const horizontalPercentage = parseInt(objectPosition[0]) / 100
+  const verticalPercentage = parseInt(objectPosition[1]) / 100
+  const viewRatio = viewWidth / viewHeight
+  const clientRatio = clientWidth / clientHeight
 
   if (objectFit === 'contain') {
     if (viewRatio > clientRatio) {
@@ -57,10 +57,13 @@ const getCoordinates = (
       (clientHeight - clientHeight * coordinates.destinationHeightPercentage) *
       0.5
   } else {
-    coordinates.destinationWidthPercentage = 1
-    coordinates.destinationHeightPercentage = 1
-    coordinates.x = 0
-    coordinates.y = 0
+    coordinates.destinationWidthPercentage = viewWidth / clientWidth
+    coordinates.destinationHeightPercentage = viewHeight / clientHeight
+    coordinates.x =
+      (clientWidth - clientWidth * coordinates.destinationWidthPercentage) * 0.5
+    coordinates.y =
+      (clientHeight - clientHeight * coordinates.destinationHeightPercentage) *
+      0.5
   }
 
   coordinates.width = clientWidth * coordinates.destinationWidthPercentage
