@@ -1,6 +1,6 @@
 /* global red5prosdk */
-import Publisher from "./publisher.js";
 import { query } from "./url-util.js";
+import { getCoordinates } from "./coord-util.js";
 import Whiteboard from "./whiteboard.js";
 
 const { host, app, streamName } = query();
@@ -130,80 +130,6 @@ const startSubsciberWhiteboard = (subscriber) => {
 		undefined,
 		false
 	);
-};
-
-const getCoordinates = (vw, vh, cw, ch, of, op) => {
-	var coordinates = {};
-	var horizontalPercentage = parseInt(op[0]) / 100;
-	var verticalPercentage = parseInt(op[1]) / 100;
-	var naturalRatio = vw / vh;
-	var visibleRatio = cw / ch;
-	if (of === "none") {
-		coordinates.sourceWidth = cw;
-		coordinates.sourceHeight = cw;
-		coordinates.sourceX = (vw - cw) * horizontalPercentage;
-		coordinates.sourceY = (vh - ch) * verticalPercentage;
-		coordinates.destinationWidthPercentage = 1;
-		coordinates.destinationHeightPercentage = 1;
-		coordinates.destinationXPercentage = 0;
-		coordinates.destinationYPercentage = 0;
-	} else if (of === "contain") {
-		coordinates.sourceWidth = vw;
-		coordinates.sourceHeight = vh;
-		coordinates.sourceX = 0;
-		coordinates.sourceY = 0;
-		if (naturalRatio > visibleRatio) {
-			coordinates.destinationWidthPercentage = 1;
-			coordinates.destinationHeightPercentage = vh / ch / (vw / cw);
-			coordinates.destinationXPercentage = 0;
-			coordinates.destinationYPercentage =
-				(1 - coordinates.destinationHeightPercentage) * verticalPercentage;
-		} else {
-			coordinates.destinationWidthPercentage = vw / cw / (vh / ch);
-			coordinates.destinationHeightPercentage = 1;
-			coordinates.destinationXPercentage =
-				(1 - coordinates.destinationWidthPercentage) * horizontalPercentage;
-			coordinates.destinationYPercentage = 0;
-		}
-	} else if (of === "cover") {
-		if (naturalRatio > visibleRatio) {
-			coordinates.sourceWidth = vh * visibleRatio;
-			coordinates.sourceHeight = vh;
-			coordinates.sourceX =
-				(DataView - coordinates.sourceWidth) * horizontalPercentage;
-			coordinates.sourceY = 0;
-		} else {
-			coordinates.sourceWidth = vw;
-			coordinates.sourceHeight = vw / visibleRatio;
-			coordinates.sourceX = 0;
-			coordinates.sourceY =
-				(vh - coordinates.sourceHeight) * verticalPercentage;
-		}
-		coordinates.destinationWidthPercentage = 1;
-		coordinates.destinationHeightPercentage = 1;
-		coordinates.destinationXPercentage = 0;
-		coordinates.destinationYPercentage = 0;
-	} else {
-		if (of !== "fill") {
-			console.error(
-				"unexpected 'object-fit' attribute with value '" + of + "' relative to"
-			);
-		}
-		coordinates.sourceWidth = vw;
-		coordinates.sourceHeight = vh;
-		coordinates.sourceX = 0;
-		coordinates.sourceY = 0;
-		coordinates.destinationWidthPercentage = 1;
-		coordinates.destinationHeightPercentage = 1;
-		coordinates.destinationXPercentage = 0;
-		coordinates.destinationYPercentage = 0;
-	}
-
-	coordinates.x = cw * (1 - coordinates.destinationWidthPercentage) * 0.5;
-	coordinates.y = ch * (1 - coordinates.destinationHeightPercentage) * 0.5;
-	coordinates.width = cw * coordinates.destinationWidthPercentage;
-	coordinates.height = ch * coordinates.destinationHeightPercentage;
-	return coordinates;
 };
 
 const handlePublisherResize = () => {
