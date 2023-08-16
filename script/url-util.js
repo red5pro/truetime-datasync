@@ -26,9 +26,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /**
  * Utility for parsing query params.
- *
- * URL and Query Params Example:
- * https://server/?url=https://server/live/streams.jsp&host=server&app=live&CameraOne=cameraOne&CameraTwo=cameraTwo
  */
 
 const paramExclude = [];
