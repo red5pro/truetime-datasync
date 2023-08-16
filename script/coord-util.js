@@ -23,6 +23,22 @@ NONINFRINGEMENT.   IN  NO  EVENT  SHALL INFRARED5, INC. BE LIABLE FOR ANY CLAIM,
 WHETHER IN  AN  ACTION  OF  CONTRACT,  TORT  OR  OTHERWISE,  ARISING  FROM,  OUT  OF  OR  IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+/**
+ * Utility method to get the actualized bounding box coordinates for the visible area of a video element.
+ * This will return the x, y, width and height of the visible area of the video element based on the size
+ *  of the element and the assigned `object-fit` style.
+ * The following `object-fit` values are supported:
+ * - contain
+ * - cover
+ * - none / unassigned
+ *
+ * @param {Number} viewWidth The width dimension of the video itself.
+ * @param {Number} viewHeight The height dimension of the video itself.
+ * @param {Number} clientWidth The width of the video element on the DOM.
+ * @param {Number} clientHeight The height of the video element on the DOM.
+ * @param {String} objectFit The `object-fit` style assigned to the video element.
+ * @returns
+ */
 const getCoordinates = (
   viewWidth,
   viewHeight,
@@ -38,6 +54,8 @@ const getCoordinates = (
     y,
     width,
     height = 0
+  // Determine the dimensional percentages of the video element to the video itself.
+  // Then, based on the `object-fit` style, determine the actualized bounding box coordinates.
   if (objectFit === 'contain') {
     if (viewRatio > clientRatio) {
       dw = 1
@@ -67,7 +85,7 @@ const getCoordinates = (
   }
   width = clientWidth * dw
   height = clientHeight * dh
-
+  // Return the coordinates.
   return { x, y, width, height }
 }
 

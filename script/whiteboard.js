@@ -23,236 +23,301 @@ NONINFRINGEMENT.   IN  NO  EVENT  SHALL INFRARED5, INC. BE LIABLE FOR ANY CLAIM,
 WHETHER IN  AN  ACTION  OF  CONTRACT,  TORT  OR  OTHERWISE,  ARISING  FROM,  OUT  OF  OR  IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * Basic debounce method.
+ * @param {Function} func
+ * @param {Number} delay
+ * @returns
+ */
 const debounce = (func, delay) => {
-	let timeoutId;
-	return function (...args) {
-		clearTimeout(timeoutId);
-		timeoutId = setTimeout(() => {
-			func.apply(this, args);
-		}, delay);
-	};
-};
+  let timeoutId
+  return function (...args) {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => {
+      func.apply(this, args)
+    }, delay)
+  }
+}
 
+/**
+ * The Whiteboard class handles sending out draw events to a transport and drawing on a canvas based on
+ * 	incoming messages from the transport as well as recorded history.
+ * The recorded history will be redrawn on resize of the canvas.
+ * The recorded history will be cleared upon instruction.
+ */
 class Whiteboard {
-	constructor(name, canvas, transport, drawable = true) {
-		this.name = name || "Whiteboard";
-		this.canvas = canvas;
-		this.context = canvas.getContext("2d");
-		this.transport = transport;
+  /**
+   *
+   * @param {String} name Simple string identifier to be used in logging.
+   * @param {Canvas} canvas HTML Canvas element to draw on.
+   * @param {Object} transport Optional transport to send draw events to.
+   * @param {Boolean} drawable Flag on whether to assign event handlers on the canvas.
+   */
+  constructor(name, canvas, transport = undefined, drawable = true) {
+    this.name = name || 'Whiteboard'
+    this.canvas = canvas
+    this.context = canvas.getContext('2d')
+    this.transport = transport
 
-		this.coordinates = {
-			x: 0,
-			y: 0,
-			width: canvas.width,
-			height: canvas.height,
-		};
-		this.isDrawing = false;
-		this.startX = 0;
-		this.startY = 0;
-		this.canvasOffsetX = this.canvas.getBoundingClientRect().left;
-		this.canvasOffsetY = this.canvas.getBoundingClientRect().top;
-		this.lineWidth = 2;
-		this.strokeColor = "#11FF00";
-		this.context.strokeStyle = this.strokeColor;
+    // Default base coordinates.
+    // These will be updated based on resize events.
+    this.coordinates = {
+      x: 0,
+      y: 0,
+      width: canvas.width,
+      height: canvas.height,
+    }
+    this.isDrawing = false
+    this.startX = 0
+    this.startY = 0
+    this.canvasOffsetX = this.canvas.getBoundingClientRect().left
+    this.canvasOffsetY = this.canvas.getBoundingClientRect().top
+    this.lineWidth = 2
+    this.strokeColor = '#11FF00'
+    this.context.strokeStyle = this.strokeColor
 
-		if (drawable) {
-			this.canvas.addEventListener("mousemove", this.draw.bind(this));
-			this.canvas.addEventListener("mousedown", this.onDown.bind(this));
-			this.canvas.addEventListener("mouseup", this.onUpOrOut.bind(this));
-			this.canvas.addEventListener("mouseout", this.onUpOrOut.bind(this));
-		}
+    // If drawable, assign event handlers.
+    if (drawable) {
+      this.canvas.addEventListener('mousemove', this.draw.bind(this))
+      this.canvas.addEventListener('mousedown', this.onDown.bind(this))
+      this.canvas.addEventListener('mouseup', this.onUpOrOut.bind(this))
+      this.canvas.addEventListener('mouseout', this.onUpOrOut.bind(this))
+    }
 
-		this.history = [];
-		this.redoHistoryDebounced = debounce(this.redoHistory.bind(this), 1000);
-	}
+    // Stores history of draw events.
+    this.history = []
+    // Debounced method to redraw history on resize.
+    this.redoHistoryDebounced = debounce(this.redoHistory.bind(this), 1000)
+  }
 
-	notify(type, data) {
-		if (this.transport) {
-			this.transport.send(type, data);
-		}
-	}
+  /**
+   * Sends out draw messages on transport.
+   * @param {String} type
+   * @param {Object} data
+   */
+  notify(type, data) {
+    if (this.transport) {
+      this.transport.send(type, data)
+    }
+  }
 
-	start(data) {
-		const {
-			x: xCoord,
-			y: yCoord,
-			width: widthCoord,
-			height: heightCoord,
-		} = this.coordinates;
-		const { x, y, xRatio, yRatio, color, lineWidth } = data;
-		this.startX = xCoord + xRatio * widthCoord;
-		this.startY = yCoord + yRatio * heightCoord;
+  /**
+   * Starts a draw request.
+   * @param {*} data
+   */
+  start(data) {
+    const {
+      x: xCoord,
+      y: yCoord,
+      width: widthCoord,
+      height: heightCoord,
+    } = this.coordinates
+    const { x, y, xRatio, yRatio, color, lineWidth } = data
+    this.startX = xCoord + xRatio * widthCoord
+    this.startY = yCoord + yRatio * heightCoord
 
-		this.strokeColor = color;
-		this.lineWidth = lineWidth;
-		this.context.strokeStyle = this.strokeColor;
-		this.context.lineWidth = this.lineWidth;
+    this.strokeColor = color
+    this.lineWidth = lineWidth
+    this.context.strokeStyle = this.strokeColor
+    this.context.lineWidth = this.lineWidth
 
-		this.context.beginPath();
-		this.context.moveTo(this.startX, this.startY);
-		this.isDrawing = true;
-		this.history.push({ ...data, methodName: "start" });
-	}
+    this.context.beginPath()
+    this.context.moveTo(this.startX, this.startY)
+    this.isDrawing = true
+    this.history.push({ ...data, methodName: 'start' })
+  }
 
-	update(x, y, xRatio, yRatio) {
-		const {
-			x: xCoord,
-			y: yCoord,
-			width: widthCoord,
-			height: heightCoord,
-		} = this.coordinates;
-		this.context.lineTo(
-			xCoord + xRatio * widthCoord,
-			yCoord + yRatio * heightCoord
-		);
-		this.context.stroke();
-		this.history.push({ x, y, xRatio, yRatio, methodName: "update" });
-	}
+  /**
+   * Updates a draw request.
+   * @param {Number} x
+   * @param {Number} y
+   * @param {Number} xRatio
+   * @param {Number} yRatio
+   */
+  update(x, y, xRatio, yRatio) {
+    const {
+      x: xCoord,
+      y: yCoord,
+      width: widthCoord,
+      height: heightCoord,
+    } = this.coordinates
+    this.context.lineTo(
+      xCoord + xRatio * widthCoord,
+      yCoord + yRatio * heightCoord
+    )
+    this.context.stroke()
+    this.history.push({ x, y, xRatio, yRatio, methodName: 'update' })
+  }
 
-	stop() {
-		this.isDrawing = false;
-		this.context.closePath();
-		// console.log(this.name, "STOPPED DRAWING");
-		this.history.push({ methodName: "stop" });
-	}
+  /**
+   * Stops a draw request.
+   */
+  stop() {
+    this.isDrawing = false
+    this.context.closePath()
+    // console.log(this.name, "STOPPED DRAWING");
+    this.history.push({ methodName: 'stop' })
+  }
 
-	draw(e) {
-		if (!this.isDrawing) {
-			return;
-		}
+  /**
+   * Internal draw method based on mousemove events.
+   * @param {MouseEvent} e
+   */
+  draw(e) {
+    if (!this.isDrawing) {
+      return
+    }
 
-		const { width, height } = this.canvas;
-		const {
-			x: xCoord,
-			y: yCoord,
-			width: widthCoord,
-			height: heightCoord,
-		} = this.coordinates;
-		const x = e.clientX - this.canvasOffsetX + window.scrollX;
-		const y = e.clientY - this.canvasOffsetY + window.scrollY;
+    const { clientX, clientY } = e
+    const { width, height } = this.canvas
+    const {
+      x: xCoord,
+      y: yCoord,
+      width: widthCoord,
+      height: heightCoord,
+    } = this.coordinates
+    const x = clientX - this.canvasOffsetX + window.scrollX
+    const y = clientY - this.canvasOffsetY + window.scrollY
 
-		this.context.strokeStyle = this.strokeColor;
-		this.context.lineWidth = this.lineWidth;
-		this.context.lineCap = "round";
-		this.context.beginPath();
-		this.context.moveTo(this.startX, this.startY);
-		this.context.lineTo(x, y);
-		this.context.stroke();
-		this.context.closePath();
-		this.startX = x;
-		this.startY = y;
+    this.context.strokeStyle = this.strokeColor
+    this.context.lineWidth = this.lineWidth
+    this.context.lineCap = 'round'
+    this.context.beginPath()
+    this.context.moveTo(this.startX, this.startY)
+    this.context.lineTo(x, y)
+    this.context.stroke()
+    this.context.closePath()
+    this.startX = x
+    this.startY = y
 
-		const data = {
-			x: x - xCoord,
-			y: y - yCoord,
-			xRatio: (x - xCoord) / widthCoord, // - (xCoord ? xCoord : 0),
-			yRatio: (y - yCoord) / heightCoord, // - (yCoord ? yCoord : 0),
-			coordinates: this.coordinates,
-			color: this.strokeColor,
-			lineWidth: this.lineWidth,
-		};
-		this.notify("whiteboardDraw", data);
-		this.history.push({ ...data, methodName: "update" });
-		// console.log(
-		// 	this.name,
-		// 	"MOVE x,y:color,linewidth",
-		// 	x,
-		// 	y,
-		// 	this.strokeColor,
-		// 	this.lineWidth
-		// );
-	}
+    const data = {
+      x: x - xCoord,
+      y: y - yCoord,
+      xRatio: (x - xCoord) / widthCoord,
+      yRatio: (y - yCoord) / heightCoord,
+      coordinates: this.coordinates,
+      color: this.strokeColor,
+      lineWidth: this.lineWidth,
+    }
+    this.notify('whiteboardDraw', data)
+    this.history.push({ ...data, methodName: 'update' })
+  }
 
-	clear() {
-		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		this.notify("whiteboardClear", {
-			width: this.canvas.width,
-			height: this.canvas.height,
-		});
-		this.history = [];
-		// console.log(this.name, "CLEARED CANVAS");
-	}
+  /**
+   * Request to clear the canvas.
+   */
+  clear() {
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    this.notify('whiteboardClear', {
+      width: this.canvas.width,
+      height: this.canvas.height,
+    })
+    // Clear history, as well.
+    this.history = []
+  }
 
-	redoHistory() {
-		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		this.history.forEach((item) => {
-			if (item.methodName === "start") {
-				this.start(item);
-			} else if (item.methodName === "update") {
-				this.update(item.x, item.y, item.xRatio, item.yRatio);
-			} else if (item.methodName === "stop") {
-				this.stop();
-			}
-		});
-	}
+  /**
+   * Request to redraw history.
+   */
+  redoHistory() {
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    this.history.forEach((item) => {
+      if (item.methodName === 'start') {
+        this.start(item)
+      } else if (item.methodName === 'update') {
+        this.update(item.x, item.y, item.xRatio, item.yRatio)
+      } else if (item.methodName === 'stop') {
+        this.stop()
+      }
+    })
+  }
 
-	onDown(e) {
-		const { width, height } = this.canvas;
-		this.isDrawing = true;
-		this.startX = e.clientX - this.canvasOffsetX + window.scrollX;
-		this.startY = e.clientY - this.canvasOffsetY + window.scrollY;
-		const {
-			x: xCoord,
-			y: yCoord,
-			width: widthCoord,
-			height: heightCoord,
-		} = this.coordinates;
-		const data = {
-			x: this.startX - xCoord,
-			y: this.startY - yCoord,
-			xRatio: (this.startX - xCoord) / widthCoord,
-			yRatio: (this.startY - yCoord) / heightCoord,
-			coordinates: this.coordinates,
-			color: this.strokeColor,
-			lineWidth: this.lineWidth,
-		};
-		this.notify("whiteboardStart", data);
-		this.history.push({ ...data, methodName: "start" });
-		// console.log(this.name, "startX, startY", this.startX, this.startY);
-	}
+  /**
+   * Internal method to handle mouse down events.
+   * @param {MouseEvent} e
+   */
+  onDown(e) {
+    const { width, height } = this.canvas
+    this.isDrawing = true
+    this.startX = e.clientX - this.canvasOffsetX + window.scrollX
+    this.startY = e.clientY - this.canvasOffsetY + window.scrollY
+    const {
+      x: xCoord,
+      y: yCoord,
+      width: widthCoord,
+      height: heightCoord,
+    } = this.coordinates
+    const data = {
+      x: this.startX - xCoord,
+      y: this.startY - yCoord,
+      xRatio: (this.startX - xCoord) / widthCoord,
+      yRatio: (this.startY - yCoord) / heightCoord,
+      coordinates: this.coordinates,
+      color: this.strokeColor,
+      lineWidth: this.lineWidth,
+    }
+    this.notify('whiteboardStart', data)
+    this.history.push({ ...data, methodName: 'start' })
+  }
 
-	onUpOrOut(e) {
-		if (this.isDrawing) {
-			this.isDrawing = false;
-			this.notify("whiteboardStop", {
-				width: this.canvas.width,
-				height: this.canvas.height,
-			});
-			// console.log(this.name, "STOPPED DRAWING");
-		}
-		this.history.push({ methodName: "stop" });
-	}
+  /**
+   * Internal method to handle mouse up or mouse out events.
+   * @param {MouseEvent} e
+   */
+  onUpOrOut(e) {
+    if (this.isDrawing) {
+      this.isDrawing = false
+      this.notify('whiteboardStop', {
+        width: this.canvas.width,
+        height: this.canvas.height,
+      })
+    }
+    this.history.push({ methodName: 'stop' })
+  }
 
-	onLineWidthChange(lineWidth) {
-		this.lineWidth = lineWidth;
-		this.notify("whiteboardChange", { lineWidth, color: this.strokeColor });
-	}
+  /**
+   * Handler for change in line width.
+   * @param {Number} lineWidth
+   */
+  onLineWidthChange(lineWidth) {
+    this.lineWidth = lineWidth
+    this.notify('whiteboardChange', { lineWidth, color: this.strokeColor })
+  }
 
-	onStrokeColorChange(strokeColor) {
-		this.strokeColor = strokeColor;
-		this.notify("whiteboardChange", {
-			lineWidth: this.lineWidth,
-			color: strokeColor,
-		});
-	}
+  /**
+   * Handler for change in stroke color.
+   * @param {String} strokeColor Hex color string.
+   */
+  onStrokeColorChange(strokeColor) {
+    this.strokeColor = strokeColor
+    this.notify('whiteboardChange', {
+      lineWidth: this.lineWidth,
+      color: strokeColor,
+    })
+  }
 
-	onResize(coordinates) {
-		const canvasParent = this.canvas.parentElement;
-		if (!canvasParent) {
-			return;
-		}
-		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		this.canvasOffsetX = this.canvas.getBoundingClientRect().left;
-		this.canvasOffsetY = this.canvas.getBoundingClientRect().top;
-		this.canvas.width = canvasParent.clientWidth;
-		this.canvas.height = canvasParent.clientHeight;
+  /**
+   * Handler for resize events.
+   * @param {Object} coordinates
+   */
+  onResize(coordinates) {
+    const canvasParent = this.canvas.parentElement
+    if (!canvasParent) {
+      return
+    }
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    this.canvasOffsetX = this.canvas.getBoundingClientRect().left
+    this.canvasOffsetY = this.canvas.getBoundingClientRect().top
+    this.canvas.width = canvasParent.clientWidth
+    this.canvas.height = canvasParent.clientHeight
 
-		this.redoHistoryDebounced();
-		if (!coordinates) return;
-		this.coordinates = coordinates;
+    this.redoHistoryDebounced()
+    if (!coordinates) return
+    this.coordinates = coordinates
 
-		// Draw border box of visible video area.
-		/*
+    // Draw border box of visible video area.
+    /*
 		const { x, y, width, height } = this.coordinates;
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.context.strokeStyle = "#ff0000";
@@ -266,7 +331,7 @@ class Whiteboard {
 			height - this.lineWidth * 2
 		);
     */
-	}
+  }
 }
 
-export default Whiteboard;
+export default Whiteboard

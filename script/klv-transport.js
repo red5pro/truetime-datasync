@@ -23,33 +23,18 @@ NONINFRINGEMENT.   IN  NO  EVENT  SHALL INFRARED5, INC. BE LIABLE FOR ANY CLAIM,
 WHETHER IN  AN  ACTION  OF  CONTRACT,  TORT  OR  OTHERWISE,  ARISING  FROM,  OUT  OF  OR  IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-/**
- * Transport implementation to send and receive messaging from clients.
- * Utilizes the Send/Invoke API over the data channel.
- */
-class DataChannelTransport {
+class KLVTransport {
   constructor(name, client) {
     this.name = name
     this.client = client
   }
 
-  /**
-   * Send a message to all subscribers using the Send API of the client.
-   * @param {String} type
-   * @param {Object} message
-   */
   send(type, message) {
-    // This will deliver an invoke message to all subscribers over the data channel.
-    this.client.send(type, message)
+    // Stub.
   }
 
-  /**
-   * Process the incoming message from the Send/Invoke API.
-   * @param {Object} message
-   */
   receive(message) {
-    // Generic handle of incoming message from the Send/Invoke API.
-    this.client.receive(message)
+    // Stub.
   }
 }
-export default DataChannelTransport
+export default KLVTransport

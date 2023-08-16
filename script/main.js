@@ -28,12 +28,14 @@ import { query } from './url-util.js'
 import { getCoordinates } from './coord-util.js'
 import Whiteboard from './whiteboard.js'
 import DataChannelTransport from './datachannel-transport.js'
+import KLVTransport from './klv-transport.js'
 
 const { host, app, streamName, get } = query()
 const { setLogLevel, WHIPClient, WHEPClient } = red5prosdk
 
 const fit = get('fit') || 'contain'
 const mode = get('mode') || 'pubsub'
+const transportType = get('transport') || 'datachannel'
 
 const strokeColorInput = document.querySelector('#stroke-color-input')
 const lineWidthInput = document.querySelector('#line-width-input')
@@ -103,12 +105,13 @@ const startWhiteboard = (publisher) => {
     handlePublisherResize()
   })
   canvasParent && ro.observe(canvasParent)
+  const transportName = '[Publisher:DataChannelTransport]'
+  const transport =
+    transportType === 'klv'
+      ? new KLVTransport(transportName, publisher)
+      : new DataChannelTransport(transportName, publisher)
   // Create a new Whiteboard instance.
-  whiteboard = new Whiteboard(
-    '[Publisher:Whiteboard]',
-    canvas,
-    new DataChannelTransport('[Publisher:DataChannelTransport]', publisher)
-  )
+  whiteboard = new Whiteboard('[Publisher:Whiteboard]', canvas, transport)
   // Assign input handlers.
   whiteboard.onStrokeColorChange(strokeColorInput.value)
   whiteboard.onLineWidthChange(parseInt(lineWidthInput.value, 10))
@@ -130,15 +133,19 @@ const startWhiteboard = (publisher) => {
  * Start the subscriber.
  */
 const startSubscribe = async () => {
-  // Default receiver transport to Send/Invoke messages over the data channel.
-  let receiverTransport = new DataChannelTransport(
-    '[Subscriber:DataChannelTransport]',
-    {
-      receive: (message) => {
-        onDataChannelMessage(message)
-      },
-    }
-  )
+  const transportName = '[Subscriber:DataChannelTransport]'
+  const transport =
+    transportType === 'klv'
+      ? new KLVTransport(transportName, {
+          receive: (message) => {
+            onKLVMessage(message)
+          },
+        })
+      : new DataChannelTransport(transportName, {
+          receive: (message) => {
+            onDataChannelMessage(message)
+          },
+        })
 
   // Create a new Subscriber instance.
   subscriber = new WHEPClient()
@@ -154,7 +161,7 @@ const startSubscribe = async () => {
           return
         }
         // Forward along to the receiver transport.
-        receiverTransport.receive(event.data)
+        transport.receive(event.data)
       } else if (
         type === 'Subscribe.Start' ||
         type === 'Subscribe.VideoDimensions.Change'
@@ -186,9 +193,7 @@ const startSubsciberWhiteboard = (subscriber) => {
   // Create a new Whiteboard instance to draw updates on.
   whiteboardSubscriber = new Whiteboard(
     '[Subscriber:Whiteboard]',
-    subscriberCanvas,
-    undefined,
-    false
+    subscriberCanvas
   )
   whiteboardSubscriber.onStrokeColorChange(strokeColorInput.value)
   whiteboardSubscriber.onLineWidthChange(parseInt(lineWidthInput.value, 10))
