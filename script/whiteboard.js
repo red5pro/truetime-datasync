@@ -41,6 +41,17 @@ const debounce = (func, delay) => {
 }
 
 /**
+ * Textual map of message types.
+ */
+export const MESSAGES = {
+  WHITEBOARD_START: 'whiteboardStart',
+  WHITEBOARD_DRAW: 'whiteboardDraw',
+  WHITEBOARD_STOP: 'whiteboardStop',
+  WHITEBOARD_CLEAR: 'whiteboardClear',
+  WHITEBOARD_CHANGE: 'whiteboardChange',
+}
+
+/**
  * The Whiteboard class handles sending out draw events to a transport and drawing on a canvas based on
  * 	incoming messages from the transport as well as recorded history.
  * The recorded history will be redrawn on resize of the canvas.
@@ -125,7 +136,7 @@ class Whiteboard {
     this.context.beginPath()
     this.context.moveTo(this.startX, this.startY)
     this.isDrawing = true
-    this.history.push({ ...data, methodName: 'start' })
+    this.history.push({ ...data, methodName: MESSAGES.WHITEBOARD_START })
   }
 
   /**
@@ -147,7 +158,13 @@ class Whiteboard {
       yCoord + yRatio * heightCoord
     )
     this.context.stroke()
-    this.history.push({ x, y, xRatio, yRatio, methodName: 'update' })
+    this.history.push({
+      x,
+      y,
+      xRatio,
+      yRatio,
+      methodName: MESSAGES.WHITEBOARD_DRAW,
+    })
   }
 
   /**
@@ -157,7 +174,7 @@ class Whiteboard {
     this.isDrawing = false
     this.context.closePath()
     // console.log(this.name, "STOPPED DRAWING");
-    this.history.push({ methodName: 'stop' })
+    this.history.push({ methodName: MESSAGES.WHITEBOARD_STOP })
   }
 
   /**
@@ -200,8 +217,8 @@ class Whiteboard {
       color: this.strokeColor,
       lineWidth: this.lineWidth,
     }
-    this.notify('whiteboardDraw', data)
-    this.history.push({ ...data, methodName: 'update' })
+    this.notify(MESSAGES.WHITEBOARD_DRAW, data)
+    this.history.push({ ...data, methodName: MESSAGES.WHITEBOARD_DRAW })
   }
 
   /**
@@ -209,7 +226,7 @@ class Whiteboard {
    */
   clear() {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
-    this.notify('whiteboardClear', {
+    this.notify(MESSAGES.WHITEBOARD_CLEAR, {
       width: this.canvas.width,
       height: this.canvas.height,
     })
@@ -223,11 +240,11 @@ class Whiteboard {
   redoHistory() {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
     this.history.forEach((item) => {
-      if (item.methodName === 'start') {
+      if (item.methodName === MESSAGES.WHITEBOARD_START) {
         this.start(item)
-      } else if (item.methodName === 'update') {
+      } else if (item.methodName === MESSAGES.WHITEBOARD_DRAW) {
         this.update(item.x, item.y, item.xRatio, item.yRatio)
-      } else if (item.methodName === 'stop') {
+      } else if (item.methodName === MESSAGES.WHITEBOARD_STOP) {
         this.stop()
       }
     })
@@ -257,8 +274,8 @@ class Whiteboard {
       color: this.strokeColor,
       lineWidth: this.lineWidth,
     }
-    this.notify('whiteboardStart', data)
-    this.history.push({ ...data, methodName: 'start' })
+    this.notify(MESSAGES.WHITEBOARD_START, data)
+    this.history.push({ ...data, methodName: MESSAGES.WHITEBOARD_START })
   }
 
   /**
@@ -268,12 +285,12 @@ class Whiteboard {
   onUpOrOut(e) {
     if (this.isDrawing) {
       this.isDrawing = false
-      this.notify('whiteboardStop', {
+      this.notify(MESSAGES.WHITEBOARD_STOP, {
         width: this.canvas.width,
         height: this.canvas.height,
       })
     }
-    this.history.push({ methodName: 'stop' })
+    this.history.push({ methodName: MESSAGES.WHITEBOARD_STOP })
   }
 
   /**
@@ -282,7 +299,10 @@ class Whiteboard {
    */
   onLineWidthChange(lineWidth) {
     this.lineWidth = lineWidth
-    this.notify('whiteboardChange', { lineWidth, color: this.strokeColor })
+    this.notify(MESSAGES.WHITEBOARD_CHANGE, {
+      lineWidth,
+      color: this.strokeColor,
+    })
   }
 
   /**
@@ -291,7 +311,7 @@ class Whiteboard {
    */
   onStrokeColorChange(strokeColor) {
     this.strokeColor = strokeColor
-    this.notify('whiteboardChange', {
+    this.notify(MESSAGES.WHITEBOARD_CHANGE, {
       lineWidth: this.lineWidth,
       color: strokeColor,
     })

@@ -26,7 +26,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /* global red5prosdk */
 import { query } from './url-util.js'
 import { getCoordinates } from './coord-util.js'
-import Whiteboard from './whiteboard.js'
+import Whiteboard, { MESSAGES } from './whiteboard.js'
 import DataChannelTransport from './datachannel-transport.js'
 import KLVTransport from './klv-transport.js'
 
@@ -54,6 +54,16 @@ subVideo.style.objectFit = fit
 const subFit = window.getComputedStyle(subVideo).getPropertyValue('object-fit')
 
 const NAME = '[TrueTime DataSync]'
+/**
+ * Map of KLV message types to textual message types.
+ */
+export const MESSAGE_TYPES = {
+  1: MESSAGES.WHITEBOARD_START,
+  2: MESSAGES.WHITEBOARD_DRAW,
+  3: MESSAGES.WHITEBOARD_STOP,
+  4: MESSAGES.WHITEBOARD_CLEAR,
+  5: MESSAGES.WHITEBOARD_CHANGE,
+}
 
 setLogLevel('debug')
 
@@ -162,11 +172,21 @@ const startSubscribe = async () => {
         }
         // Forward along to the receiver transport.
         transport.receive(event.data)
+      } else if (type === 'WebRTC.DataChannel.Message') {
+        const { data, method, type } = event.data
+        if (method && type.toLowerCase() === 'metadata') {
+          if (method.toLowerCase() === 'onklv') {
+            transport.receive(data)
+          }
+        }
       } else if (
         type === 'Subscribe.Start' ||
         type === 'Subscribe.VideoDimensions.Change'
       ) {
         handleSubscriberResize()
+      } else if (type === 'Subscribe.Connection.Closed') {
+        console.warn(NAME, 'Subscriber connection closed.')
+        startSubscribe()
       }
     }
   })
@@ -206,21 +226,73 @@ const startSubsciberWhiteboard = (subscriber) => {
 const onDataChannelMessage = (message) => {
   const { methodName, data } = message
   if (whiteboardSubscriber) {
-    if (methodName === 'whiteboardDraw') {
+    if (methodName === MESSAGES.WHITEBOARD_DRAW) {
       const { x, y, xRatio, yRatio } = data
       whiteboardSubscriber.update(x, y, xRatio, yRatio)
-    } else if (methodName === 'whiteboardClear') {
+    } else if (methodName === MESSAGES.WHITEBOARD_CLEAR) {
       whiteboardSubscriber.clear()
-    } else if (methodName === 'whiteboardStart') {
+    } else if (methodName === MESSAGES.WHITEBOARD_START) {
       whiteboardSubscriber.start(data)
-    } else if (methodName === 'whiteboardStop') {
+    } else if (methodName === MESSAGES.WHITEBOARD_STOP) {
       whiteboardSubscriber.stop()
-    } else if (methodName === 'whiteboardChange') {
+    } else if (methodName === MESSAGES.WHITEBOARD_CHANGE) {
       const { color, lineWidth } = data
       whiteboardSubscriber.onStrokeColorChange(color)
       whiteboardSubscriber.onLineWidthChange(lineWidth)
     }
   }
+}
+
+/**
+ * KLVTransport receiver message handler.
+ * @param {Object} message
+ */
+const onKLVMessage = (message) => {
+  const { ul } = message // universal label describing the message types.
+  const klv = new Map()
+  const keys = Object.keys(message)
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i]
+    if (!isNaN(parseInt(key, 10))) {
+      klv.set(key, message[key])
+    }
+  }
+
+  const hexDecodeToJSON = (hexString) => {
+    const rawString = decodeURIComponent(hexString.replace(/(..)/g, '%$1'))
+    const decodedString = window.atob(rawString)
+    return JSON.parse(decodedString)
+  }
+
+  klv.forEach((value, key) => {
+    const type = MESSAGE_TYPES[key]
+    if (type === MESSAGES.WHITEBOARD_DRAW) {
+      try {
+        const { x, y, xRatio, yRatio } = hexDecodeToJSON(value)
+        whiteboardSubscriber.update(x, y, xRatio, yRatio)
+      } catch (e) {
+        console.error(e)
+      }
+    } else if (type === MESSAGES.WHITEBOARD_CLEAR) {
+      whiteboardSubscriber.clear()
+    } else if (type === MESSAGES.WHITEBOARD_START) {
+      try {
+        whiteboardSubscriber.start(hexDecodeToJSON(value))
+      } catch (e) {
+        console.error(e)
+      }
+    } else if (type === MESSAGES.WHITEBOARD_STOP) {
+      whiteboardSubscriber.stop()
+    } else if (type === MESSAGES.WHITEBOARD_CHANGE) {
+      try {
+        const { color, lineWidth } = hexDecodeToJSON(value)
+        whiteboardSubscriber.onStrokeColorChange(color)
+        whiteboardSubscriber.onLineWidthChange(lineWidth)
+      } catch (e) {
+        console.error(e)
+      }
+    }
+  })
 }
 
 /**
@@ -295,10 +367,11 @@ const start = async () => {
     await startSubscribe()
   } else {
     await startPublish()
+    // Have to delay because it connects to fast!
     let t = setTimeout(() => {
       clearTimeout(t)
       startSubscribe()
-    }, 500)
+    }, 2000)
   }
 }
 start()
