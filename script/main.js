@@ -30,7 +30,7 @@ import Whiteboard, { MESSAGES } from './whiteboard.js'
 import DataChannelTransport from './datachannel-transport.js'
 import KLVTransport from './klv-transport.js'
 
-const { host, app, streamName, get } = query()
+const { host, app, streamName, feedName, get } = query()
 const { setLogLevel, WHIPClient, WHEPClient } = red5prosdk
 
 const fit = get('fit') || 'contain'
@@ -72,7 +72,7 @@ let subscriber, whiteboardSubscriber
 
 // Base configuration for both publisher and subscriber.
 const baseConfig = {
-  host: host || window.location.hostname,
+  host: host || 'truetime-ds.red5pro.net', // window.location.hostname,
   app: app || 'live',
   streamName: streamName || `stream-${new Date().getTime()}`,
   mediaConstraints: {
@@ -87,6 +87,20 @@ const baseConfig = {
 }
 console.log(NAME, 'baseConfig', baseConfig)
 
+const getFeedStream = async (feedName) => {
+  const elementId = 'red5pro-publisher'
+  const element = document.querySelector(`#${elementId}`)
+  const feedConfig = {
+    ...baseConfig,
+    mediaElementId: elementId,
+    streamName: feedName,
+  }
+  const feed = new WHEPClient()
+  await feed.init(feedConfig)
+  await feed.subscribe()
+  return element.srcObject
+}
+
 /**
  * Start the publisher.
  */
@@ -99,7 +113,15 @@ const startPublish = async () => {
       handlePublisherResize()
     }
   })
-  await publisher.init(baseConfig)
+
+  if (feedName) {
+    // If we have a feed name, we will consume that.
+    const mediaStream = await getFeedStream(feedName)
+    await publisher.initWithStream(baseConfig, mediaStream)
+  } else {
+    // Else we will broadcast our camera.
+    await publisher.init(baseConfig)
+  }
   await publisher.publish()
   // Start interactive whiteboard.
   startWhiteboard(publisher)

@@ -28,16 +28,16 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * Utility for parsing query params.
  */
 
-const paramExclude = [];
+const paramExclude = []
 
 /**
  * Return flag indicating whether or not the query params include a host.
  * @returns {boolean} Whether or not the query params include a host.
  */
 export const hasHostDefined = () => {
-	const searchParams = new URLSearchParams(window.location.search);
-	return searchParams.has("host");
-};
+  const searchParams = new URLSearchParams(window.location.search)
+  return searchParams.has('host')
+}
 
 /**
  * Utility for parsing query params.
@@ -51,22 +51,26 @@ export const hasHostDefined = () => {
  * @returns {object} Object containing the query params.
  */
 export const query = () => {
-	const searchParams = new URLSearchParams(window.location.search);
-	let host = searchParams.get("host")
-		? decodeURIComponent(searchParams.get("host"))
-		: undefined;
-	let app = searchParams.get("app")
-		? decodeURIComponent(searchParams.get("app"))
-		: undefined;
-	let streamName = searchParams.get("streamName")
-		? decodeURIComponent(searchParams.get("streamName"))
-		: undefined;
-	return {
-		host,
-		app,
-		streamName,
-		get: (key) => {
-			return searchParams.get(key);
-		},
-	};
-};
+  const searchParams = new URLSearchParams(window.location.search)
+  let host = searchParams.get('host')
+    ? decodeURIComponent(searchParams.get('host'))
+    : undefined
+  let app = searchParams.get('app')
+    ? decodeURIComponent(searchParams.get('app'))
+    : undefined
+  let streamName = searchParams.get('streamName')
+    ? decodeURIComponent(searchParams.get('streamName'))
+    : undefined
+  let feedName = searchParams.get('feedName')
+    ? decodeURIComponent(searchParams.get('feedName'))
+    : undefined
+  return {
+    host,
+    app,
+    streamName,
+    feedName,
+    get: (key) => {
+      return searchParams.get(key)
+    },
+  }
+}
