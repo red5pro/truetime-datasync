@@ -30,6 +30,58 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
     <link rel="stylesheet" href="/style/publisher.css" />
     <link rel="stylesheet" href="/style/subscriber.css" />
     <title>Red5 TrueTime DataSync</title>
+    <script>
+      ;(function () {
+        console.log('------- USAGE --------')
+        console.log('')
+        console.log(
+          'This page is designed to establish a TrueTime DataSync webapp using query params. You can provide query params in the URL in order to configure the webapp.'
+        )
+        console.log('The following query params are available:')
+        console.log(
+          '%c [host] ' +
+            '%c       : hostname or IP. Default: `window.location.hostname`',
+          'background: #222; color: #ebefd0',
+          'background: #fff; color: #222'
+        )
+        console.log('')
+        console.log(
+          '%c [app] ' + '%c       : app context. Default: `live`',
+          'background: #222; color: #ebefd0',
+          'background: #fff; color: #222'
+        )
+        console.log('')
+        console.log(
+          '%c [streamName] ' +
+            '%c       : The stream name to use to broadcast out as and subscribe to. Default: `stream-${new Date().getTime()}`',
+          'background: #222; color: #ebefd0',
+          'background: #fff; color: #222'
+        )
+        console.log('')
+        console.log(
+          '%c [feedName] ' +
+            '%c       : The optional remote feed stream name to display as a broadcaster. Default: `undefined`',
+          'background: #222; color: #ebefd0',
+          'background: #fff; color: #222'
+        )
+        console.log('')
+        console.log(
+          '%c [fit] ' +
+            '%c       : The object-fit style to apply to video elements. Supported values - `contain`, `cover` and `none`. Default: `contain`',
+          'background: #222; color: #ebefd0',
+          'background: #fff; color: #222'
+        )
+        console.log('')
+        console.log(
+          '%c [mode] ' +
+            '%c       : The display mode. `pubsub` - shows both publisher and subscriber. `pub` or `sub` - displays either, respecively. Default: `pubsub`',
+          'background: #222; color: #ebefd0',
+          'background: #fff; color: #222'
+        )
+        console.log('')
+        console.log('------- /USAGE --------')
+      })()
+    </script>
   </head>
   <body>
     <div id="app">
