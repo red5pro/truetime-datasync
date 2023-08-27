@@ -75,4 +75,27 @@ In a `pubsub` mode, the publisher and drawing tools are located at the top of th
 
 ## Query Params
 
-The following query parameters are available. Though _optional_, it is recommended to use in order to properly configure your TrueTime Multi-View session.
+The following query parameters are available. Though _optional_, it is recommended to use in order to properly configure your TrueTime DataSync session.
+
+| Param Name   |          Default Value           | Description                                                                                                                                                               |
+| :----------- | :------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `host`       |    `window.location.hostname`    | The Red5 Pro Server endpoint that hosts the live streams. _The FQDN_                                                                                                      |
+| `app`        |              `live`              | The webapp context on which the live streams reside.                                                                                                                      |
+| `streamName` | `stream-${new Date().getTime()}` | The streamName to broadcast out as a publisher and subscribe to as a subscriber.                                                                                          |
+| `feedName`   |           `undefined`            | The optional stream name of an another "feed" stream that will be rebroadcast from a publisher.                                                                           |
+| `mode`       |             `pubsub`             | The mode of the webapp. `pubsub` provides a publisher and subscriber on the same page. `pub` provides just the publisher (and tools). `sub` provides just the subscriber. |
+| `fit`        |            `contain`             | The `object-fit` property to set on the `video` elements. Possible values: `contain`, `cover` and `none`.                                                                 |
+
+## Example Query Param Usage
+
+Rebroadcasting a feed stream with name `mysportsfeed` to a broadcast with streamname `annotationfeed`:
+
+```
+https://myserver.com?feedName=mysportsfeed&streamName=annotationFeed
+```
+
+And displaying only the publisher with the video stream resized and positioned within the `video` element to eliminate letter boxing:
+
+```
+https://myserver.com?feedName=mysportsfeed&streamName=annotationFeed&mode=pub&fit=cover
+```

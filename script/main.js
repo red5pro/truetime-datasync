@@ -87,6 +87,11 @@ const baseConfig = {
 }
 console.log(NAME, 'baseConfig', baseConfig)
 
+/**
+ * Returns MediaStream instance of rebroadcast of incoming feed stream.
+ * @param {String} feedName
+ * @returns
+ */
 const getFeedStream = async (feedName) => {
   const elementId = 'red5pro-publisher'
   const element = document.querySelector(`#${elementId}`)
@@ -98,6 +103,9 @@ const getFeedStream = async (feedName) => {
   const feed = new WHEPClient()
   await feed.init(feedConfig)
   await feed.subscribe()
+  if ('captureStream' in element) {
+    return element.captureStream()
+  }
   return element.srcObject
 }
 
