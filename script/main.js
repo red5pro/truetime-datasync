@@ -69,6 +69,7 @@ setLogLevel('debug')
 
 let publisher, whiteboard
 let subscriber, whiteboardSubscriber
+let feedSubscriber
 
 // Base configuration for both publisher and subscriber.
 const baseConfig = {
@@ -100,9 +101,9 @@ const getFeedStream = async (feedName) => {
     mediaElementId: elementId,
     streamName: feedName,
   }
-  const feed = new WHEPClient()
-  await feed.init(feedConfig)
-  await feed.subscribe()
+  feedSubscriber = new WHEPClient()
+  await feedSubscriber.init(feedConfig)
+  await feedSubscriber.subscribe()
   if ('captureStream' in element) {
     return element.captureStream()
   }
@@ -373,6 +374,9 @@ const handleWindowResize = () => {
  * Shutdown the publisher and subscriber.
  */
 const shutdown = () => {
+  if (feedSubscriber) {
+    feedSubscriber.unsubscribe()
+  }
   if (publisher) {
     publisher.unpublish()
   }
