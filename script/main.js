@@ -73,7 +73,7 @@ let feedSubscriber
 
 // Base configuration for both publisher and subscriber.
 const baseConfig = {
-  host: host || 'truetime-ds.red5pro.net', // window.location.hostname,
+  host: host || window.location.hostname,
   app: app || 'live',
   streamName: streamName || `stream-${new Date().getTime()}`,
   mediaConstraints: {
