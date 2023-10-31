@@ -1,5 +1,6 @@
 {
   "title": "TrueTime DataSync",
+  "webappParentDirectory": "truetime",
   "webappName": "datasync",
   "webappSource": "./",
   "buildCommand": "npm install && npm run build",
