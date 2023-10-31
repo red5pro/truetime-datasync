@@ -2,6 +2,6 @@
   "title": "TrueTime DataSync",
   "webappName": "datasync",
   "webappSource": "./",
-  "buildCommand": "npm run build",
+  "buildCommand": "npm install && npm run build",
   "webappOutput": "dist"
 }
