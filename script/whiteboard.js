@@ -109,6 +109,9 @@ class Whiteboard {
    */
   notify(type, data) {
     if (this.transport) {
+      if (data.coordinates && typeof data.coordinates !== 'string') {
+        data.coordinates = JSON.stringify(data.coordinates)
+      }
       this.transport.send(type, data)
     }
   }
