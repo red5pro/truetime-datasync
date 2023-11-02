@@ -198,7 +198,7 @@ const startSubscribe = async () => {
         const {
           data: { senderName },
         } = event.data
-        if (senderName !== baseConfig.streamName) {
+        if (senderName && senderName !== baseConfig.streamName) {
           return
         }
         // Forward along to the receiver transport.
