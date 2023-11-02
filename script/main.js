@@ -198,7 +198,7 @@ const startSubscribe = async () => {
         const {
           data: { senderName },
         } = event.data
-        if (senderName !== baseConfig.streamName) {
+        if (senderName && senderName !== baseConfig.streamName) {
           return
         }
         // Forward along to the receiver transport.
@@ -207,6 +207,8 @@ const startSubscribe = async () => {
         const { data, method, type } = event.data
         if (method && type.toLowerCase() === 'metadata') {
           if (method.toLowerCase() === 'onklv') {
+            transport.receive(data)
+          } else if (method.toLowerCase().match(/^whiteboard/)) {
             transport.receive(data)
           }
         }
@@ -244,7 +246,9 @@ const startSubsciberWhiteboard = (subscriber) => {
   // Create a new Whiteboard instance to draw updates on.
   whiteboardSubscriber = new Whiteboard(
     '[Subscriber:Whiteboard]',
-    subscriberCanvas
+    subscriberCanvas,
+    undefined,
+    false
   )
   whiteboardSubscriber.onStrokeColorChange(strokeColorInput.value)
   whiteboardSubscriber.onLineWidthChange(parseInt(lineWidthInput.value, 10))
@@ -263,6 +267,9 @@ const onDataChannelMessage = (message) => {
     } else if (methodName === MESSAGES.WHITEBOARD_CLEAR) {
       whiteboardSubscriber.clear()
     } else if (methodName === MESSAGES.WHITEBOARD_START) {
+      if (typeof data.coordinates === 'string') {
+        data.coordinates = JSON.parse(data.coordinates)
+      }
       whiteboardSubscriber.start(data)
     } else if (methodName === MESSAGES.WHITEBOARD_STOP) {
       whiteboardSubscriber.stop()
