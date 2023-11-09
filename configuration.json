@@ -3,6 +3,6 @@
   "webappParentDirectory": "truetime",
   "webappName": "truetime-datasync",
   "webappSource": "./",
-  "buildCommand": "npm install && npm run build",
+  "buildCommand": "npm install && npm run build && cp README.md dist/",
   "webappOutput": "dist"
 }
