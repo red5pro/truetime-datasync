@@ -1,6 +1,6 @@
 # Red5 TrueTime Data Synchronization
 
-This web application demonstrates sending drawing routine information from a broadcaster to all subscribers. The subscribers receives the information as metadata and overlays the drawing routine on its own playback in true time.
+This web application demonstrates sending drawing routine information from a broadcaster to all subscribers. The subscriber(s) receive the information as metadata and overlays the drawing routine on its own playback in true time.
 
 Browser environment and element styles and rendering have been considered with regards to the `object-fit` CSS property that can assigned to `video` elements. The aspect ratio and scale of the sender's view is transferred over and transposed for all subscribers regardless of their own layout and `object-fit` value so the drawing on the receivers' end is shown in the same position as the drawing on the sender's end.
 

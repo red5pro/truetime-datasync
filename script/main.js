@@ -35,6 +35,7 @@ const { setLogLevel, WHIPClient, WHEPClient } = red5prosdk
 
 const fit = get('fit') || 'contain'
 const mode = get('mode') || 'pubsub'
+const intro = get('intro') || false
 const transportType = get('transport') || 'datachannel'
 
 const strokeColorInput = document.querySelector('#stroke-color-input')
@@ -52,6 +53,9 @@ const subContainer = document.querySelector('.subscribe-container')
 const subVideo = document.querySelector('#red5pro-subscriber')
 subVideo.style.objectFit = fit
 const subFit = window.getComputedStyle(subVideo).getPropertyValue('object-fit')
+
+const introContainer = document.querySelector('#intro')
+const introSubmit = document.querySelector('#intro-submit')
 
 const NAME = '[TrueTime DataSync]'
 /**
@@ -397,6 +401,13 @@ window.addEventListener('pagehide', shutdown)
 window.addEventListener('beforeunload', shutdown)
 window.addEventListener('resize', handleWindowResize)
 document.addEventListener('DOMContentLoaded', handleWindowResize)
+
+if (intro) {
+  introContainer.classList.remove('hidden')
+  introSubmit.addEventListener('click', () => {
+    introContainer.classList.add('hidden')
+  })
+}
 
 // Start the publisher and/or subscriber based on defined mode.
 const start = async () => {
