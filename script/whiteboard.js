@@ -87,6 +87,8 @@ class Whiteboard {
     this.lineWidth = 2
     this.strokeColor = '#11FF00'
     this.context.strokeStyle = this.strokeColor
+    this.context.lineWidth = this.lineWidth
+    this.context.lineCap = 'round'
 
     // If drawable, assign event handlers.
     if (drawable) {
@@ -135,6 +137,7 @@ class Whiteboard {
     this.lineWidth = lineWidth
     this.context.strokeStyle = this.strokeColor
     this.context.lineWidth = this.lineWidth
+    this.context.lineCap = 'round'
 
     this.context.beginPath()
     this.context.moveTo(this.startX, this.startY)
