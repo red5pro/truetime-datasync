@@ -411,19 +411,37 @@ if (intro) {
 
 // Start the publisher and/or subscriber based on defined mode.
 const start = async () => {
-  if (mode === 'pub') {
-    subContainer.style.display = 'none'
-    await startPublish()
-  } else if (mode === 'sub') {
-    pubContainer.style.display = 'none'
-    await startSubscribe()
-  } else {
-    await startPublish()
-    // Have to delay because it connects to fast!
-    let t = setTimeout(() => {
-      clearTimeout(t)
-      startSubscribe()
-    }, 2000)
+  try {
+    if (mode === 'pub') {
+      subContainer.style.display = 'none'
+      await startPublish()
+    } else if (mode === 'sub') {
+      pubContainer.style.display = 'none'
+      await startSubscribe()
+    } else {
+      await startPublish()
+      // Have to delay because it connects to fast!
+      let t = setTimeout(() => {
+        clearTimeout(t)
+        startSubscribe()
+      }, 2000)
+    }
+  } catch (e) {
+    console.error(e)
+    const { name, message } = e
+    switch (name) {
+      case 'NotAllowedError':
+        alert('Please allow access to camera and microphone.')
+        break
+      case 'InvalidNameError':
+        alert(
+          `Could not start a ${mode} session with the provided stream name: ${streamName}.\r\n\r\n${message}\r\n\r\nSee Dev Console for more details.`
+        )
+        break
+      default:
+        alert('Failed to start. See console for details.')
+        break
+    }
   }
 }
 start()
