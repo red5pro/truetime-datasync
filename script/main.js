@@ -100,12 +100,18 @@ console.log(NAME, 'baseConfig', baseConfig)
 const getFeedStream = async (feedName) => {
   const elementId = 'red5pro-publisher'
   const element = document.querySelector(`#${elementId}`)
+
   const feedConfig = {
     ...baseConfig,
     mediaElementId: elementId,
     streamName: feedName,
   }
   feedSubscriber = new WHEPClient()
+  // In the event we are re-broadcasting, we need to ensure that
+  // subscriber video dimensions change affect the drawing area
+  feedSubscriber.on('Subscribe.VideoDimensions.Change', () => {
+    handlePublisherResize()
+  })
   await feedSubscriber.init(feedConfig)
   await feedSubscriber.subscribe()
   if ('captureStream' in element) {
