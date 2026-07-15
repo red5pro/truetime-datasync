@@ -1,4 +1,4 @@
-# Red5 TrueTime Data Synchronization
+# Red5 TrueTime DataSync™ Web Client
 
 This web application demonstrates sending drawing routine information from a broadcaster to all subscribers. The subscriber(s) receive the information as metadata and overlays the drawing routine on its own playback in true time.
 
